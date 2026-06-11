@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PromptCreator — AI Prompt Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090C;
+  --surface:#0F1117;
+  --card:#151820;
+  --border:#1E2130;
+  --border2:#2A2F45;
+  --violet:#7C5CFC;
+  --violet2:#5B3FD4;
+  --cyan:#00D4FF;
+  --pink:#FF4D8D;
+  --green:#00E5A0;
+  --yellow:#FFD23F;
+  --orange:#FF7A30;
+  --text:#F0F2FF;
+  --muted:#6B7294;
+  --muted2:#9BA3C8;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* GRID BG */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(124,92,252,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,92,252,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+
+/* NAV */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,9,12,0.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:60px;
+}
+.nav-logo{
+  font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:800;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  cursor:pointer;
+  text-decoration:none;
+  display:flex;align-items:center;gap:6px;
+  transition:opacity .2s, transform .18s;
+  user-select:none;
+}
+.nav-logo:hover{opacity:.82;transform:scale(1.03);}
+.nav-logo:active{transform:scale(.97);}
+.nav-logo .logo-icon{
+  font-size:1.3rem;
+  -webkit-text-fill-color:initial;
+  color:initial;
+  display:inline-block;
+  transition:transform .3s;
+}
+.nav-logo:hover .logo-icon{transform:rotate(-8deg) scale(1.15);}
+.nav-logo .logo-sub{
+  font-weight:400;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+  -webkit-text-fill-color:var(--muted);color:var(--muted);
+  font-family:'Space Grotesk',sans-serif;
+  opacity:.7;
+  margin-left:2px;
+}
+.nav-logo .logo-home-hint{
+  font-size:.62rem;color:var(--muted);-webkit-text-fill-color:var(--muted);
+  font-family:'Space Grotesk',sans-serif;font-weight:400;
+  opacity:0;transition:opacity .2s;
+  margin-left:4px;
+}
+.nav-logo:hover .logo-home-hint{opacity:1;}
+.nav-pills{display:flex;gap:4px}
+.nav-pill{
+  padding:5px 14px;border-radius:99px;font-size:.78rem;font-weight:500;
+  border:1px solid transparent;cursor:pointer;transition:all .2s;color:var(--muted2);background:transparent;
+}
+.nav-pill.active,.nav-pill:hover{border-color:var(--violet);color:var(--violet);background:rgba(124,92,252,.1);}
+
+/* HERO */
+.hero{
+  position:relative;z-index:1;
+  text-align:center;padding:64px 20px 48px;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(124,92,252,.12);border:1px solid rgba(124,92,252,.3);
+  border-radius:99px;padding:6px 16px;font-size:.78rem;color:var(--violet);
+  margin-bottom:24px;letter-spacing:.06em;text-transform:uppercase;
+}
+.hero-badge::before{content:'✦';animation:spin 4s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero h1{
+  font-family:'Syne',sans-serif;font-size:clamp(2.2rem,5vw,3.8rem);
+  font-weight:800;line-height:1.1;margin-bottom:16px;
+}
+.hero h1 .grad{
+  background:linear-gradient(135deg,var(--violet) 0%,var(--cyan) 50%,var(--pink) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero p{color:var(--muted2);font-size:1.05rem;max-width:560px;margin:0 auto 32px;line-height:1.7;}
+.platform-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:40px;}
+.p-pill{
+  padding:5px 14px;border-radius:6px;font-size:.75rem;font-weight:500;
+  border:1px solid var(--border2);color:var(--muted2);
+}
+.p-pill.img{border-color:rgba(255,212,63,.3);color:var(--yellow);}
+.p-pill.vid{border-color:rgba(255,77,141,.3);color:var(--pink);}
+.p-pill.mus{border-color:rgba(0,228,160,.3);color:var(--green);}
+.p-pill.soc{border-color:rgba(0,212,255,.3);color:var(--cyan);}
+
+/* MAIN LAYOUT */
+.app{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 20px 80px;}
+
+/* CATEGORY TABS */
+.cat-tabs{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:10px;margin-bottom:28px;
+}
+.cat-tab{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:16px 12px;cursor:pointer;transition:all .2s;text-align:center;
+}
+.cat-tab:hover{border-color:var(--border2);transform:translateY(-2px);}
+.cat-tab.active{border-color:var(--violet);background:rgba(124,92,252,.08);}
+.cat-tab .icon{font-size:1.6rem;display:block;margin-bottom:6px;}
+.cat-tab .name{font-size:.82rem;font-weight:600;color:var(--text);}
+.cat-tab .sub{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.cat-tab.active .name{color:var(--violet);}
+
+/* PANEL */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;}
+.panel-title{
+  font-size:.7rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--violet);margin-bottom:20px;display:flex;align-items:center;gap:8px;
+}
+.panel-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* FORM ELEMENTS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-row.triple{grid-template-columns:1fr 1fr 1fr;}
+.form-full{grid-column:1/-1;}
+.field{margin-bottom:14px;}
+label.lbl{
+  display:block;font-size:.72rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted2);margin-bottom:7px;
+}
+select,input[type=text],textarea{
+  width:100%;background:var(--surface);border:1px solid var(--border2);
+  border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;
+  font-size:.9rem;padding:10px 14px;outline:none;
+  transition:border-color .2s,background .2s;
+}
+textarea{resize:vertical;min-height:80px;}
+select{
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237C5CFC' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  padding-right:36px;
+}
+select option{background:#151820;}
+select:focus,input:focus,textarea:focus{border-color:var(--violet);background:rgba(124,92,252,.05);}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.7;}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{
+  background:var(--surface);border:1px solid var(--border2);border-radius:6px;
+  padding:5px 12px;font-size:.76rem;font-weight:500;color:var(--muted2);
+  cursor:pointer;transition:all .18s;user-select:none;
+}
+.chip:hover{border-color:var(--border2);color:var(--text);}
+.chip.active{background:rgba(124,92,252,.15);border-color:var(--violet);color:var(--violet);}
+.chip.active.cyan{background:rgba(0,212,255,.12);border-color:var(--cyan);color:var(--cyan);}
+.chip.active.pink{background:rgba(255,77,141,.12);border-color:var(--pink);color:var(--pink);}
+.chip.active.green{background:rgba(0,228,160,.12);border-color:var(--green);color:var(--green);}
+.chip.active.yellow{background:rgba(255,210,63,.12);border-color:var(--yellow);color:var(--yellow);}
+
+/* PLATFORM SELECTOR */
+.platform-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+.plat-btn{
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:12px 8px;cursor:pointer;transition:all .2s;text-align:center;
+}
+.plat-btn:hover{border-color:var(--border2);}
+.plat-btn.active{border-color:var(--violet);background:rgba(124,92,252,.1);}
+.plat-btn .picon{font-size:1.3rem;display:block;margin-bottom:4px;}
+.plat-btn .pname{font-size:.72rem;font-weight:600;color:var(--muted2);}
+.plat-btn.active .pname{color:var(--violet);}
+
+/* GENERATE BTN */
+.btn-gen{
+  width:100%;padding:16px;border:none;border-radius:10px;cursor:pointer;
+  background:linear-gradient(135deg,var(--violet),var(--violet2));
+  color:#fff;font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;
+  letter-spacing:.04em;transition:all .2s;
+  box-shadow:0 4px 32px rgba(124,92,252,.35);position:relative;overflow:hidden;
+}
+.btn-gen::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,212,255,.15),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.btn-gen:hover::after{opacity:1;}
+.btn-gen:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(124,92,252,.45);}
+.btn-gen:active{transform:translateY(0);}
+.btn-gen:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+
+/* LOADER */
+.loader{display:none;text-align:center;padding:40px;color:var(--muted2);}
+.loader.show{display:block;}
+.loader-ring{
+  width:40px;height:40px;border:2px solid var(--border2);
+  border-top-color:var(--violet);border-radius:50%;
+  animation:rotate 1s linear infinite;margin:0 auto 16px;
+}
+@keyframes rotate{to{transform:rotate(360deg)}}
+.loader p{font-size:.88rem;}
+
+/* OUTPUT */
+.output-wrap{display:none;}
+.output-wrap.show{display:block;animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.out-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.out-tab{
+  padding:7px 16px;border-radius:6px;font-size:.8rem;font-weight:600;
+  border:1px solid var(--border2);color:var(--muted2);cursor:pointer;transition:all .2s;
+}
+.out-tab.active{background:rgba(124,92,252,.15);border-color:var(--violet);color:var(--violet);}
+
+.out-pane{display:none;}
+.out-pane.active{display:block;}
+
+.out-section{margin-bottom:20px;}
+.out-label{
+  font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.out-label .dot{width:6px;height:6px;border-radius:50%;background:var(--violet);flex-shrink:0;}
+
+.prompt-card{
+  background:var(--surface);border:1px solid var(--border2);border-radius:10px;
+  padding:18px;font-family:'JetBrains Mono',monospace;font-size:.8rem;
+  line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;
+  position:relative;
+}
+.prompt-card .kw{color:var(--violet);}
+.prompt-card .val{color:var(--cyan);}
+.prompt-card .neg{color:var(--pink);}
+
+.copy-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.copy-btn{
+  background:transparent;border:1px solid var(--border2);border-radius:6px;
+  color:var(--muted2);font-size:.75rem;padding:6px 14px;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;font-weight:500;transition:all .2s;
+}
+.copy-btn:hover{border-color:var(--violet);color:var(--violet);}
+.copy-btn.copied{border-color:var(--green);color:var(--green);}
+
+.hashtag-cloud{display:flex;flex-wrap:wrap;gap:7px;}
+.htag{
+  background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);
+  border-radius:5px;padding:4px 10px;font-size:.76rem;
+  color:var(--cyan);font-family:'JetBrains Mono',monospace;cursor:pointer;
+  transition:background .2s;
+}
+.htag:hover{background:rgba(0,212,255,.16);}
+
+.score-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.score-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:12px 16px;flex:1;min-width:120px;
+}
+.score-card .sc-label{font-size:.68rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+.score-card .sc-val{font-size:1.2rem;font-weight:700;}
+.score-card .sc-val.v{color:var(--violet);}
+.score-card .sc-val.g{color:var(--green);}
+.score-card .sc-val.y{color:var(--yellow);}
+.score-card .sc-val.p{color:var(--pink);}
+
+.tip-box{
+  background:rgba(124,92,252,.06);border:1px solid rgba(124,92,252,.2);
+  border-radius:8px;padding:14px 16px;font-size:.82rem;color:var(--muted2);
+  line-height:1.7;margin-top:16px;
+}
+.tip-box strong{color:var(--violet);}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  background:var(--green);color:#000;font-weight:600;font-size:.85rem;
+  padding:10px 20px;border-radius:8px;transform:translateY(80px);opacity:0;
+  transition:all .3s;pointer-events:none;
+}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* FOOTER STATS */
+.stats-bar{
+  display:flex;gap:28px;justify-content:center;flex-wrap:wrap;
+  padding:28px 20px;border-top:1px solid var(--border);margin-top:20px;
+}
+.stat{text-align:center;}
+.stat .sv{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;
+  background:linear-gradient(135deg,var(--violet),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.stat .sl{font-size:.72rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+
+/* SECTION HIDDEN */
+.cat-section{display:none;}
+.cat-section.active{display:block;}
+
+@media(max-width:640px){
+  .form-row,.form-row.triple{grid-template-columns:1fr;}
+  .cat-tabs{grid-template-columns:repeat(3,1fr);}
+  .nav-pills{display:none;}
+}
+
+/* ─── PAGES ─── */
+.page{display:none;}
+.page.active{display:block;animation:fadeUp .35s ease;}
+
+/* Platform page */
+.plat-page-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px;}
+.plat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:24px;transition:all .22s;cursor:pointer;
+}
+.plat-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.plat-card.img-card:hover{border-color:rgba(255,212,63,.4);}
+.plat-card.vid-card:hover{border-color:rgba(255,77,141,.4);}
+.plat-card.mus-card:hover{border-color:rgba(0,228,160,.4);}
+.plat-card.soc-card:hover{border-color:rgba(0,212,255,.4);}
+.plat-card-icon{font-size:2.2rem;margin-bottom:12px;display:block;}
+.plat-card-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:4px;}
+.plat-card-type{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;}
+.plat-card-type.img{color:var(--yellow);}
+.plat-card-type.vid{color:var(--pink);}
+.plat-card-type.mus{color:var(--green);}
+.plat-card-type.soc{color:var(--cyan);}
+.plat-card-desc{font-size:.83rem;color:var(--muted2);line-height:1.6;margin-bottom:14px;}
+.plat-card-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.plat-card-tag{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:4px;padding:3px 8px;font-size:.7rem;color:var(--muted);}
+.plat-card-btn{
+  margin-top:16px;width:100%;padding:9px;border-radius:7px;border:1px solid var(--border2);
+  background:transparent;color:var(--muted2);font-size:.8rem;font-weight:600;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;transition:all .2s;
+}
+.plat-card-btn:hover{border-color:var(--violet);color:var(--violet);background:rgba(124,92,252,.08);}
+
+.section-head{margin-bottom:20px;}
+.section-head h2{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;margin-bottom:4px;}
+.section-head p{font-size:.88rem;color:var(--muted2);}
+.section-divider{
+  display:flex;align-items:center;gap:12px;margin:28px 0 20px;
+  font-size:.7rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Templates page */
+.tmpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.tmpl-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:20px;cursor:pointer;transition:all .2s;
+}
+.tmpl-card:hover{border-color:var(--violet);transform:translateY(-2px);}
+.tmpl-card-emoji{font-size:1.6rem;margin-bottom:10px;display:block;}
+.tmpl-card-title{font-weight:700;font-size:.95rem;margin-bottom:6px;}
+.tmpl-card-desc{font-size:.78rem;color:var(--muted2);line-height:1.55;margin-bottom:12px;}
+.tmpl-card-meta{display:flex;gap:6px;align-items:center;}
+.tmpl-card-cat{font-size:.68rem;padding:3px 8px;border-radius:4px;font-weight:600;}
+.tmpl-card-cat.img{background:rgba(255,212,63,.1);color:var(--yellow);border:1px solid rgba(255,212,63,.2);}
+.tmpl-card-cat.vid{background:rgba(255,77,141,.1);color:var(--pink);border:1px solid rgba(255,77,141,.2);}
+.tmpl-card-cat.mus{background:rgba(0,228,160,.1);color:var(--green);border:1px solid rgba(0,228,160,.2);}
+.tmpl-card-cat.soc{background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.2);}
+.tmpl-card-cat.yt{background:rgba(255,77,77,.1);color:#ff6b6b;border:1px solid rgba(255,77,77,.2);}
+.tmpl-use-btn{
+  margin-top:14px;width:100%;padding:8px;border-radius:6px;
+  background:rgba(124,92,252,.1);border:1px solid rgba(124,92,252,.25);
+  color:var(--violet);font-size:.78rem;font-weight:600;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;transition:all .2s;
+}
+.tmpl-use-btn:hover{background:rgba(124,92,252,.2);}
+
+
+/* ─── TREND ANALYSIS ─── */
+.trend-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.trend-card{
+  background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:16px;
+}
+.trend-card-title{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.trend-card-title .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.kw-list{display:flex;flex-direction:column;gap:6px;}
+.kw-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.kw-word{font-size:.82rem;color:var(--text);font-weight:500;flex:1;}
+.kw-bar-wrap{width:90px;height:5px;background:var(--border2);border-radius:99px;overflow:hidden;flex-shrink:0;}
+.kw-bar{height:100%;border-radius:99px;transition:width .6s ease;}
+.kw-bar.hot{background:linear-gradient(90deg,var(--pink),var(--orange));}
+.kw-bar.med{background:linear-gradient(90deg,var(--violet),var(--cyan));}
+.kw-bar.low{background:linear-gradient(90deg,var(--green),var(--cyan));}
+.kw-vol{font-size:.68rem;color:var(--muted);white-space:nowrap;flex-shrink:0;min-width:48px;text-align:right;}
+.viral-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.vtag{
+  padding:4px 10px;border-radius:5px;font-size:.74rem;font-weight:600;
+  font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .18s;
+}
+.vtag.fire{background:rgba(255,77,141,.12);border:1px solid rgba(255,77,141,.3);color:var(--pink);}
+.vtag.hot{background:rgba(255,122,48,.12);border:1px solid rgba(255,122,48,.3);color:var(--orange);}
+.vtag.grow{background:rgba(124,92,252,.12);border:1px solid rgba(124,92,252,.3);color:var(--violet);}
+.vtag.niche{background:rgba(0,228,160,.12);border:1px solid rgba(0,228,160,.3);color:var(--green);}
+.vtag:hover{transform:translateY(-1px);}
+.score-ring-wrap{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.score-ring{
+  background:var(--surface);border:1px solid var(--border2);border-radius:10px;
+  padding:14px 16px;flex:1;min-width:110px;text-align:center;
+}
+.score-ring .sr-val{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;}
+.score-ring .sr-val.fire{background:linear-gradient(135deg,var(--pink),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.score-ring .sr-val.violet{background:linear-gradient(135deg,var(--violet),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.score-ring .sr-val.green{color:var(--green);}
+.score-ring .sr-val.yellow{color:var(--yellow);}
+.score-ring .sr-lbl{font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px;}
+.platform-insights{display:flex;flex-direction:column;gap:8px;}
+.insight-row{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;
+}
+.insight-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
+.insight-text{font-size:.8rem;color:var(--muted2);line-height:1.55;}
+.insight-text strong{color:var(--text);}
+.competitor-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.comp-chip{
+  background:rgba(255,210,63,.08);border:1px solid rgba(255,210,63,.2);
+  border-radius:5px;padding:4px 10px;font-size:.73rem;color:var(--yellow);
+  font-family:'JetBrains Mono',monospace;
+}
+@media(max-width:560px){.trend-grid{grid-template-columns:1fr;}}
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="goHome()" title="Go to Home">
+    <span class="logo-icon">✦</span>
+    PromptCreator
+    <span class="logo-sub">AI Studio</span>
+    <span class="logo-home-hint">⌂ home</span>
+  </div>
+  <div class="nav-pills">
+    <div class="nav-pill active" data-page="generator">Generator</div>
+    <div class="nav-pill" data-page="platforms">Platforms</div>
+    <div class="nav-pill" data-page="templates">Templates</div>
+  </div>
+</nav>
+
+<!-- PAGES WRAPPER -->
+<div id="page-generator" class="page active">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">AI Prompt Engine · All Platforms</div>
+  <h1>Generate <span class="grad">Perfect Prompts</span><br/>for Every AI Platform</h1>
+  <p>One tool for images, videos, music, captions, titles, descriptions, hashtags and more — powered by Claude AI.</p>
+  <div class="platform-pills">
+    <span class="p-pill img">🎨 Midjourney</span>
+    <span class="p-pill img">🔥 Adobe Firefly</span>
+    <span class="p-pill img">🖼 DALL·E 3</span>
+    <span class="p-pill img">⚡ Stable Diffusion</span>
+    <span class="p-pill vid">🎬 Sora</span>
+    <span class="p-pill vid">🎞 Runway ML</span>
+    <span class="p-pill vid">🐦 Kling AI</span>
+    <span class="p-pill mus">🎵 Suno AI</span>
+    <span class="p-pill mus">🎶 Udio</span>
+    <span class="p-pill soc">📱 Instagram</span>
+    <span class="p-pill soc">▶️ YouTube</span>
+    <span class="p-pill soc">#️⃣ Hashtags</span>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- CATEGORY TABS -->
+  <div class="cat-tabs">
+    <div class="cat-tab active" data-cat="image">
+      <span class="icon">🎨</span>
+      <div class="name">Image AI</div>
+      <div class="sub">Midjourney · Firefly · DALL·E</div>
+    </div>
+    <div class="cat-tab" data-cat="video">
+      <span class="icon">🎬</span>
+      <div class="name">Video AI</div>
+      <div class="sub">Sora · Runway · Kling</div>
+    </div>
+    <div class="cat-tab" data-cat="music">
+      <span class="icon">🎵</span>
+      <div class="name">Music AI</div>
+      <div class="sub">Suno · Udio · Boomy</div>
+    </div>
+    <div class="cat-tab" data-cat="social">
+      <span class="icon">📱</span>
+      <div class="name">Social Media</div>
+      <div class="sub">Captions · Reels · Shorts</div>
+    </div>
+    <div class="cat-tab" data-cat="youtube">
+      <span class="icon">▶️</span>
+      <div class="name">YouTube</div>
+      <div class="sub">Title · Desc · Tags</div>
+    </div>
+    <div class="cat-tab" data-cat="hashtag">
+      <span class="icon">#️⃣</span>
+      <div class="name">Hashtags</div>
+      <div class="sub">Trending · Niche · Viral</div>
+    </div>
+  </div>
+
+  <!-- ===== IMAGE SECTION ===== -->
+  <div class="cat-section active" id="cat-image">
+    <div class="panel">
+      <div class="panel-title">Platform</div>
+      <div class="platform-grid">
+        <div class="plat-btn active" data-p="Midjourney"><span class="picon">🎨</span><span class="pname">Midjourney</span></div>
+        <div class="plat-btn" data-p="Adobe Firefly"><span class="picon">🔥</span><span class="pname">Adobe Firefly</span></div>
+        <div class="plat-btn" data-p="DALL-E 3"><span class="picon">🖼</span><span class="pname">DALL·E 3</span></div>
+        <div class="plat-btn" data-p="Stable Diffusion"><span class="picon">⚡</span><span class="pname">Stable Diffusion</span></div>
+        <div class="plat-btn" data-p="Leonardo AI"><span class="picon">🦁</span><span class="pname">Leonardo AI</span></div>
+        <div class="plat-btn" data-p="Ideogram"><span class="picon">💡</span><span class="pname">Ideogram</span></div>
+        <div class="plat-btn" data-p="Flux"><span class="picon">🌊</span><span class="pname">Flux</span></div>
+        <div class="plat-btn" data-p="Canva AI"><span class="picon">✏️</span><span class="pname">Canva AI</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Describe Your Image</div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Subject / Main Element</label>
+          <input type="text" id="img-subject" placeholder="e.g. Lord Hanuman dancing, futuristic city, girl reading..."/>
+        </div>
+        <div>
+          <label class="lbl">Art Style</label>
+          <select id="img-style">
+            <option>Photorealistic</option>
+            <option>3D Cartoon / Pixar Style</option>
+            <option>Anime / Manga</option>
+            <option>Oil Painting</option>
+            <option>Digital Art / Concept Art</option>
+            <option>Watercolor</option>
+            <option>Cinematic Film Still</option>
+            <option>Fantasy Illustration</option>
+            <option>Minimalist / Flat Design</option>
+            <option>Vintage / Retro</option>
+            <option>Surrealist</option>
+            <option>Comic Book</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Lighting</label>
+          <select id="img-light">
+            <option>Golden Hour Sunlight</option>
+            <option>Dramatic Cinematic Lighting</option>
+            <option>Soft Studio Light</option>
+            <option>Neon / Cyberpunk Glow</option>
+            <option>Volumetric God Rays</option>
+            <option>Moonlight / Blue Hour</option>
+            <option>Backlit / Silhouette</option>
+            <option>Rim Light</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Camera / Angle</label>
+          <select id="img-cam">
+            <option>Wide Establishing Shot</option>
+            <option>Close-Up Portrait</option>
+            <option>Aerial / Bird's Eye View</option>
+            <option>Low Angle Hero Shot</option>
+            <option>Dutch Angle</option>
+            <option>Macro Shot</option>
+            <option>360 Panorama</option>
+            <option>POV First Person</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Mood / Atmosphere</label>
+          <select id="img-mood">
+            <option>Epic / Majestic</option>
+            <option>Peaceful / Serene</option>
+            <option>Mysterious / Dark</option>
+            <option>Vibrant / Festive</option>
+            <option>Romantic / Soft</option>
+            <option>Futuristic / Sci-Fi</option>
+            <option>Melancholic / Dreamy</option>
+            <option>Horror / Eerie</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Aspect Ratio</label>
+          <select id="img-ratio">
+            <option value="16:9">16:9 — YouTube / Landscape</option>
+            <option value="9:16">9:16 — Reels / TikTok</option>
+            <option value="1:1">1:1 — Instagram Square</option>
+            <option value="4:5">4:5 — Instagram Portrait</option>
+            <option value="2:3">2:3 — Pinterest</option>
+            <option value="4:3">4:3 — Standard</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Color Palette</label>
+        <div class="chips" id="img-colors">
+          <div class="chip active" data-v="warm gold and saffron">Warm Gold</div>
+          <div class="chip" data-v="cool blue and white">Cool Blue</div>
+          <div class="chip" data-v="neon purple and cyan">Neon Purple</div>
+          <div class="chip" data-v="earthy brown and green">Earthy</div>
+          <div class="chip" data-v="pastel pink and cream">Pastel</div>
+          <div class="chip" data-v="black and red">Dark Red</div>
+          <div class="chip" data-v="sunset orange and pink">Sunset</div>
+          <div class="chip" data-v="monochrome">Monochrome</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Extra Details / Special Elements</label>
+        <textarea id="img-extra" placeholder="e.g. flower petals floating, divine aura glow, ancient temple background, cinematic depth of field..."></textarea>
+      </div>
+      <div class="field">
+        <label class="lbl">Negative Prompt (what to AVOID)</label>
+        <input type="text" id="img-neg" placeholder="e.g. blurry, ugly, watermark, text, modern style..." value="blurry, ugly, watermark, text overlay, low quality, bad anatomy"/>
+      </div>
+    </div>
+    <button class="btn-gen" onclick="generate('image')">✦ Generate Image Prompts</button>
+  </div>
+
+  <!-- ===== VIDEO SECTION ===== -->
+  <div class="cat-section" id="cat-video">
+    <div class="panel">
+      <div class="panel-title">Platform</div>
+      <div class="platform-grid">
+        <div class="plat-btn active" data-p="Sora"><span class="picon">🎬</span><span class="pname">Sora</span></div>
+        <div class="plat-btn" data-p="Runway ML"><span class="picon">🎞</span><span class="pname">Runway ML</span></div>
+        <div class="plat-btn" data-p="Kling AI"><span class="picon">🐦</span><span class="pname">Kling AI</span></div>
+        <div class="plat-btn" data-p="Pika Labs"><span class="picon">⚡</span><span class="pname">Pika Labs</span></div>
+        <div class="plat-btn" data-p="Adobe Firefly Video"><span class="picon">🔥</span><span class="pname">Firefly Video</span></div>
+        <div class="plat-btn" data-p="Luma AI"><span class="picon">🌙</span><span class="pname">Luma AI</span></div>
+        <div class="plat-btn" data-p="Hailuo AI"><span class="picon">🌊</span><span class="pname">Hailuo AI</span></div>
+        <div class="plat-btn" data-p="Vidu AI"><span class="picon">🎥</span><span class="pname">Vidu AI</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Video Scene Details</div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Video Type</label>
+          <select id="vid-type">
+            <option>Music Video</option>
+            <option>Short Film / Cinematic Scene</option>
+            <option>YouTube Short / Reel</option>
+            <option>Product Ad / Commercial</option>
+            <option>Nature / Landscape</option>
+            <option>Character Animation</option>
+            <option>Explainer / Motion Graphics</option>
+            <option>Documentary Style</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Visual Style</label>
+          <select id="vid-style">
+            <option>Cinematic Hollywood</option>
+            <option>3D Animation Pixar Style</option>
+            <option>Anime</option>
+            <option>Live Action Realistic</option>
+            <option>Bollywood Cinematic</option>
+            <option>Mythological / Epic Fantasy</option>
+            <option>Documentary</option>
+            <option>Lo-Fi Aesthetic</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Scene Description</label>
+        <textarea id="vid-scene" placeholder="Describe what happens in the video — who, what, where, actions, emotions..." style="min-height:100px"></textarea>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Camera Movement</label>
+          <select id="vid-cam">
+            <option>Slow zoom in</option>
+            <option>Aerial drone descend</option>
+            <option>360 orbit around subject</option>
+            <option>Dolly push forward</option>
+            <option>Handheld shaky cam</option>
+            <option>Static locked shot</option>
+            <option>Pan left to right</option>
+            <option>Crane shot rising</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Pacing</label>
+          <select id="vid-pace">
+            <option>Slow Motion — cinematic</option>
+            <option>Normal paced — natural</option>
+            <option>Fast cut — energetic</option>
+            <option>Time lapse</option>
+            <option>Hyperlapse</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Duration</label>
+          <select id="vid-dur">
+            <option>5 seconds</option>
+            <option>10 seconds</option>
+            <option>15 seconds</option>
+            <option>30 seconds</option>
+            <option>60 seconds</option>
+            <option>3–5 minutes</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Mood</label>
+          <select id="vid-mood">
+            <option>Epic and powerful</option>
+            <option>Peaceful and devotional</option>
+            <option>Romantic and dreamy</option>
+            <option>Fun and energetic</option>
+            <option>Mysterious and dark</option>
+            <option>Emotional and melancholic</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Special Visual Effects</label>
+        <div class="chips" id="vid-fx">
+          <div class="chip active" data-v="flower petals floating">Flower Petals</div>
+          <div class="chip" data-v="god rays volumetric light">God Rays</div>
+          <div class="chip" data-v="particle dust glitter">Particles</div>
+          <div class="chip" data-v="fire flames">Fire</div>
+          <div class="chip" data-v="lightning bolts">Lightning</div>
+          <div class="chip" data-v="divine golden aura">Aura Glow</div>
+          <div class="chip" data-v="rain droplets">Rain</div>
+          <div class="chip" data-v="smoke mist fog">Smoke/Fog</div>
+          <div class="chip" data-v="neon glow">Neon Glow</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-gen" onclick="generate('video')">✦ Generate Video Prompts</button>
+  </div>
+
+  <!-- ===== MUSIC SECTION ===== -->
+  <div class="cat-section" id="cat-music">
+    <div class="panel">
+      <div class="panel-title">Platform</div>
+      <div class="platform-grid">
+        <div class="plat-btn active" data-p="Suno AI"><span class="picon">🎵</span><span class="pname">Suno AI</span></div>
+        <div class="plat-btn" data-p="Udio"><span class="picon">🎶</span><span class="pname">Udio</span></div>
+        <div class="plat-btn" data-p="Boomy"><span class="picon">💫</span><span class="pname">Boomy</span></div>
+        <div class="plat-btn" data-p="Musicfy"><span class="picon">🎸</span><span class="pname">Musicfy</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Music Details</div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Genre</label>
+          <select id="mus-genre">
+            <option>Bollywood Pop</option>
+            <option>Devotional Bhajan</option>
+            <option>Lo-Fi Hip Hop</option>
+            <option>EDM / Dance</option>
+            <option>Classical Indian</option>
+            <option>Rock</option>
+            <option>R&B / Soul</option>
+            <option>Sufi / Qawwali</option>
+            <option>Jazz</option>
+            <option>Folk</option>
+            <option>Trap</option>
+            <option>Ambient / Meditation</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Mood</label>
+          <select id="mus-mood">
+            <option>Uplifting and joyful</option>
+            <option>Calm and meditative</option>
+            <option>Energetic and powerful</option>
+            <option>Romantic and dreamy</option>
+            <option>Sad and emotional</option>
+            <option>Dark and intense</option>
+            <option>Festive and celebratory</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Tempo (BPM)</label>
+          <select id="mus-tempo">
+            <option>Slow — 50–70 BPM</option>
+            <option>Medium — 80–95 BPM</option>
+            <option>Upbeat — 100–115 BPM</option>
+            <option>Fast — 120–135 BPM</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Vocal Style</label>
+          <select id="mus-vocal">
+            <option>Male baritone — soulful</option>
+            <option>Female soprano — melodic</option>
+            <option>Choir / Group vocals</option>
+            <option>Rap / Hip hop flow</option>
+            <option>No vocals — instrumental</option>
+            <option>Classical Indian — khayal</option>
+            <option>Call and response</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Instruments</label>
+        <div class="chips" id="mus-inst">
+          <div class="chip active" data-v="tabla">Tabla</div>
+          <div class="chip active" data-v="sitar">Sitar</div>
+          <div class="chip" data-v="harmonium">Harmonium</div>
+          <div class="chip" data-v="bansuri flute">Bansuri</div>
+          <div class="chip" data-v="guitar">Guitar</div>
+          <div class="chip" data-v="piano">Piano</div>
+          <div class="chip" data-v="synthesizer">Synth</div>
+          <div class="chip" data-v="strings orchestra">Strings</div>
+          <div class="chip" data-v="drums">Drums</div>
+          <div class="chip" data-v="bass">Bass</div>
+          <div class="chip" data-v="violin">Violin</div>
+          <div class="chip" data-v="trumpet">Trumpet</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Song Theme / Lyrics Concept</label>
+        <textarea id="mus-theme" placeholder="e.g. A devotional song about Lord Hanuman dancing in Ayodhya, the joy of Ram's return, a love song about missing someone..."></textarea>
+      </div>
+      <div class="field">
+        <label class="lbl">Language</label>
+        <select id="mus-lang">
+          <option>Hindi</option>
+          <option>English</option>
+          <option>Sanskrit</option>
+          <option>Hindi + English mix</option>
+          <option>Tamil</option>
+          <option>Telugu</option>
+          <option>Punjabi</option>
+          <option>No lyrics — Instrumental</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-gen" onclick="generate('music')">✦ Generate Music Prompts</button>
+  </div>
+
+  <!-- ===== SOCIAL SECTION ===== -->
+  <div class="cat-section" id="cat-social">
+    <div class="panel">
+      <div class="panel-title">Platform & Content Type</div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Platform</label>
+          <select id="soc-platform">
+            <option>Instagram Feed Post</option>
+            <option>Instagram Reel</option>
+            <option>Instagram Story</option>
+            <option>YouTube Short</option>
+            <option>Facebook Post</option>
+            <option>Twitter / X</option>
+            <option>LinkedIn</option>
+            <option>Pinterest</option>
+            <option>TikTok</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Content Niche</label>
+          <select id="soc-niche">
+            <option>Devotional / Spiritual</option>
+            <option>Motivational</option>
+            <option>Comedy / Entertainment</option>
+            <option>Fashion / Beauty</option>
+            <option>Food / Recipe</option>
+            <option>Travel</option>
+            <option>Gaming</option>
+            <option>Tech / AI</option>
+            <option>Fitness / Health</option>
+            <option>Business / Finance</option>
+            <option>Music / Art</option>
+            <option>Education</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">What is your post / reel / video about?</label>
+        <textarea id="soc-about" placeholder="Describe your content — e.g. A reel of Hanuman Ji dancing in Ayodhya, a motivational quote about success, a recipe video for mango lassi..."></textarea>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Tone of Caption</label>
+          <select id="soc-tone">
+            <option>Devotional / Spiritual</option>
+            <option>Inspiring / Motivational</option>
+            <option>Fun / Playful</option>
+            <option>Professional</option>
+            <option>Emotional / Heartfelt</option>
+            <option>Informative</option>
+            <option>Humorous</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Caption Length</label>
+          <select id="soc-len">
+            <option>Short — 1–2 lines</option>
+            <option>Medium — 3–5 lines</option>
+            <option>Long — Story format</option>
+            <option>Hook + CTA only</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Target Audience</label>
+        <input type="text" id="soc-audience" placeholder="e.g. Hindu devotees, young Indians, fitness enthusiasts, entrepreneurs..."/>
+      </div>
+      <div class="field">
+        <label class="lbl">Call to Action</label>
+        <select id="soc-cta">
+          <option>Follow for more</option>
+          <option>Save this post</option>
+          <option>Share with friends</option>
+          <option>Comment your thoughts</option>
+          <option>Link in bio</option>
+          <option>Subscribe / Like</option>
+          <option>No CTA</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-gen" onclick="generate('social')">✦ Generate Captions + Hooks</button>
+  </div>
+
+  <!-- ===== YOUTUBE SECTION ===== -->
+  <div class="cat-section" id="cat-youtube">
+    <div class="panel">
+      <div class="panel-title">YouTube Video Details</div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Video Topic</label>
+          <input type="text" id="yt-topic" placeholder="e.g. Hanuman Ji dancing in Ayodhya devotional song"/>
+        </div>
+        <div>
+          <label class="lbl">Channel Niche</label>
+          <select id="yt-niche">
+            <option>Devotional / Bhajan</option>
+            <option>Motivational</option>
+            <option>Entertainment</option>
+            <option>Education / Tutorial</option>
+            <option>Gaming</option>
+            <option>Tech / Review</option>
+            <option>Vlog / Lifestyle</option>
+            <option>Comedy</option>
+            <option>Music</option>
+            <option>News / Current Affairs</option>
+            <option>Kids / Animation</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Video Length</label>
+          <select id="yt-len">
+            <option>Short — under 1 minute</option>
+            <option>Short-Mid — 1–5 minutes</option>
+            <option>Medium — 5–15 minutes</option>
+            <option>Long — 15–30 minutes</option>
+            <option>Long-form — 30+ minutes</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Target Audience</label>
+          <input type="text" id="yt-audience" placeholder="e.g. Hindu devotees aged 18–45, Indian youth..."/>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Key Points / What video covers</label>
+        <textarea id="yt-points" placeholder="e.g. 3D animated devotional song, Hanuman dancing, Ayodhya backdrop, modern bhajan style..."></textarea>
+      </div>
+      <div class="field">
+        <label class="lbl">Thumbnail Style Needed</label>
+        <select id="yt-thumb">
+          <option>3D Cartoon / Animated</option>
+          <option>Cinematic Photography</option>
+          <option>Bold Text + Face</option>
+          <option>Illustrated / Art Style</option>
+          <option>Minimal / Clean</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="lbl">Mood / Emotion for title</label>
+        <select id="yt-mood">
+          <option>Devotional and divine</option>
+          <option>Inspirational and uplifting</option>
+          <option>Curiosity / Mystery</option>
+          <option>Shocking / Viral hook</option>
+          <option>Emotional / Heartfelt</option>
+          <option>Fun and entertaining</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-gen" onclick="generate('youtube')">✦ Generate Title, Description & Tags</button>
+  </div>
+
+  <!-- ===== HASHTAG SECTION ===== -->
+  <div class="cat-section" id="cat-hashtag">
+    <div class="panel">
+      <div class="panel-title">Hashtag Generator</div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Topic / Content</label>
+          <input type="text" id="ht-topic" placeholder="e.g. Hanuman Ji devotional video, Indian street food, gym motivation..."/>
+        </div>
+        <div>
+          <label class="lbl">Platform</label>
+          <select id="ht-platform">
+            <option>Instagram</option>
+            <option>YouTube</option>
+            <option>Twitter / X</option>
+            <option>TikTok</option>
+            <option>LinkedIn</option>
+            <option>Pinterest</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label class="lbl">Niche</label>
+          <select id="ht-niche">
+            <option>Devotional / Spiritual</option>
+            <option>Motivational</option>
+            <option>Entertainment</option>
+            <option>Music / Bhajan</option>
+            <option>Travel / Pilgrimage</option>
+            <option>Food</option>
+            <option>Fashion</option>
+            <option>Tech / AI</option>
+            <option>Fitness</option>
+            <option>Business</option>
+            <option>Art / Illustration</option>
+            <option>Gaming</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Hashtag Strategy</label>
+          <select id="ht-strategy">
+            <option>Mix — Small + Medium + Large</option>
+            <option>Trending Only — High Volume</option>
+            <option>Niche Only — Low Competition</option>
+            <option>Local / India Focused</option>
+            <option>Global / Viral</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">Language / Region</label>
+        <select id="ht-lang">
+          <option>English</option>
+          <option>Hindi</option>
+          <option>Mixed — English + Hindi</option>
+          <option>Tamil</option>
+          <option>Telugu</option>
+          <option>Punjabi</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="lbl">Count</label>
+        <select id="ht-count">
+          <option>10 hashtags</option>
+          <option>20 hashtags</option>
+          <option>30 hashtags</option>
+          <option>50 hashtags</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-gen" onclick="generate('hashtag')">✦ Generate Trending Hashtags</button>
+  </div>
+
+  <!-- LOADER -->
+  <div class="loader" id="main-loader">
+    <div class="loader-ring"></div>
+    <p id="loader-msg">Crafting your perfect prompt…</p>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="output-wrap" id="output-wrap">
+    <div class="panel">
+      <div class="panel-title">Your Generated Content</div>
+      <div class="out-tabs" id="out-tabs"></div>
+      <div id="out-panes"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat"><div class="sv">17+</div><div class="sl">AI Platforms</div></div>
+    <div class="stat"><div class="sv">6</div><div class="sl">Content Types</div></div>
+    <div class="stat"><div class="sv">50+</div><div class="sl">Style Options</div></div>
+    <div class="stat"><div class="sv">∞</div><div class="sl">Prompts Generated</div></div>
+  </div>
+
+</div>
+
+</div><!-- /page-generator -->
+
+<!-- ===== PLATFORMS PAGE ===== -->
+<div id="page-platforms" class="page">
+  <div class="app">
+    <div class="section-head" style="text-align:center;padding:40px 0 32px">
+      <h2>All Supported AI Platforms</h2>
+      <p>Click any platform to jump directly to its prompt generator</p>
+    </div>
+
+    <div class="section-divider">🎨 Image Generation</div>
+    <div class="plat-page-grid">
+      <div class="plat-card img-card" onclick="gotoGenerator('image','Midjourney')">
+        <span class="plat-card-icon">🎨</span>
+        <div class="plat-card-name">Midjourney</div>
+        <div class="plat-card-type img">Image AI</div>
+        <div class="plat-card-desc">The gold standard for AI art. Exceptional for photorealistic images, fantasy art, and cinematic scenes. Uses --ar, --style, --v parameters.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Artistic</span><span class="plat-card-tag">Photorealistic</span><span class="plat-card-tag">Discord-based</span></div>
+        <button class="plat-card-btn">Generate Midjourney Prompt →</button>
+      </div>
+      <div class="plat-card img-card" onclick="gotoGenerator('image','Adobe Firefly')">
+        <span class="plat-card-icon">🔥</span>
+        <div class="plat-card-name">Adobe Firefly</div>
+        <div class="plat-card-type img">Image AI</div>
+        <div class="plat-card-desc">Adobe's generative AI, best for commercial use and integrating with Photoshop / Illustrator. Commercially safe outputs.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Commercial Safe</span><span class="plat-card-tag">Adobe Suite</span><span class="plat-card-tag">Video Too</span></div>
+        <button class="plat-card-btn">Generate Firefly Prompt →</button>
+      </div>
+      <div class="plat-card img-card" onclick="gotoGenerator('image','DALL-E 3')">
+        <span class="plat-card-icon">🖼</span>
+        <div class="plat-card-name">DALL·E 3</div>
+        <div class="plat-card-type img">Image AI</div>
+        <div class="plat-card-desc">OpenAI's image model. Excellent for text rendering in images and following detailed natural language prompts precisely.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Text in Images</span><span class="plat-card-tag">ChatGPT</span><span class="plat-card-tag">Natural Language</span></div>
+        <button class="plat-card-btn">Generate DALL·E Prompt →</button>
+      </div>
+      <div class="plat-card img-card" onclick="gotoGenerator('image','Stable Diffusion')">
+        <span class="plat-card-icon">⚡</span>
+        <div class="plat-card-name">Stable Diffusion</div>
+        <div class="plat-card-type img">Image AI</div>
+        <div class="plat-card-desc">Open-source powerhouse. Highly customizable with LoRAs, ControlNet, and thousands of community models. Run locally.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Open Source</span><span class="plat-card-tag">Local Run</span><span class="plat-card-tag">LoRA</span></div>
+        <button class="plat-card-btn">Generate SD Prompt →</button>
+      </div>
+      <div class="plat-card img-card" onclick="gotoGenerator('image','Leonardo AI')">
+        <span class="plat-card-icon">🦁</span>
+        <div class="plat-card-name">Leonardo AI</div>
+        <div class="plat-card-type img">Image AI</div>
+        <div class="plat-card-desc">Great for game assets, character design, and product mockups. Offers fine-tuned models for specific styles.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Game Assets</span><span class="plat-card-tag">Characters</span><span class="plat-card-tag">Fine-tuned</span></div>
+        <button class="plat-card-btn">Generate Leonardo Prompt →</button>
+      </div>
+      <div class="plat-card img-card" onclick="gotoGenerator('image','Ideogram')">
+        <span class="plat-card-icon">💡</span>
+        <div class="plat-card-name">Ideogram</div>
+        <div class="plat-card-type img">Image AI</div>
+        <div class="plat-card-desc">Best-in-class for typography and text integration in images. Perfect for posters, logos, and social media graphics.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Typography</span><span class="plat-card-tag">Logos</span><span class="plat-card-tag">Posters</span></div>
+        <button class="plat-card-btn">Generate Ideogram Prompt →</button>
+      </div>
+      <div class="plat-card img-card" onclick="gotoGenerator('image','Flux')">
+        <span class="plat-card-icon">🌊</span>
+        <div class="plat-card-name">Flux</div>
+        <div class="plat-card-type img">Image AI</div>
+        <div class="plat-card-desc">Black Forest Labs' newest model. Exceptional photorealism and prompt adherence. Rivals Midjourney in quality.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Photorealistic</span><span class="plat-card-tag">Latest 2024</span><span class="plat-card-tag">Fast</span></div>
+        <button class="plat-card-btn">Generate Flux Prompt →</button>
+      </div>
+      <div class="plat-card img-card" onclick="gotoGenerator('image','Canva AI')">
+        <span class="plat-card-icon">✏️</span>
+        <div class="plat-card-name">Canva AI</div>
+        <div class="plat-card-type img">Image AI</div>
+        <div class="plat-card-desc">Integrated inside Canva for social media and design. Perfect for quick branded content and presentations.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Social Media</span><span class="plat-card-tag">Easy</span><span class="plat-card-tag">Branded</span></div>
+        <button class="plat-card-btn">Generate Canva Prompt →</button>
+      </div>
+    </div>
+
+    <div class="section-divider">🎬 Video Generation</div>
+    <div class="plat-page-grid">
+      <div class="plat-card vid-card" onclick="gotoGenerator('video','Sora')">
+        <span class="plat-card-icon">🎬</span>
+        <div class="plat-card-name">Sora</div>
+        <div class="plat-card-type vid">Video AI</div>
+        <div class="plat-card-desc">OpenAI's text-to-video model. Creates cinematic, high-quality videos up to 1 minute. Exceptional camera physics.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">OpenAI</span><span class="plat-card-tag">60 sec</span><span class="plat-card-tag">Cinematic</span></div>
+        <button class="plat-card-btn">Generate Sora Prompt →</button>
+      </div>
+      <div class="plat-card vid-card" onclick="gotoGenerator('video','Runway ML')">
+        <span class="plat-card-icon">🎞</span>
+        <div class="plat-card-name">Runway ML</div>
+        <div class="plat-card-type vid">Video AI</div>
+        <div class="plat-card-desc">Industry favorite for professional video generation. Gen-3 Alpha offers great consistency and motion control.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Gen-3 Alpha</span><span class="plat-card-tag">Pro</span><span class="plat-card-tag">Motion Control</span></div>
+        <button class="plat-card-btn">Generate Runway Prompt →</button>
+      </div>
+      <div class="plat-card vid-card" onclick="gotoGenerator('video','Kling AI')">
+        <span class="plat-card-icon">🐦</span>
+        <div class="plat-card-name">Kling AI</div>
+        <div class="plat-card-type vid">Video AI</div>
+        <div class="plat-card-desc">Chinese AI video platform excelling in realistic human motion and facial expressions. Great for dance and action content.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Human Motion</span><span class="plat-card-tag">5 sec</span><span class="plat-card-tag">Faces</span></div>
+        <button class="plat-card-btn">Generate Kling Prompt →</button>
+      </div>
+      <div class="plat-card vid-card" onclick="gotoGenerator('video','Pika Labs')">
+        <span class="plat-card-icon">⚡</span>
+        <div class="plat-card-name">Pika Labs</div>
+        <div class="plat-card-type vid">Video AI</div>
+        <div class="plat-card-desc">Fast and accessible video generation. Great for short clips, social media content, and quick creative experiments.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Fast</span><span class="plat-card-tag">Social</span><span class="plat-card-tag">Easy</span></div>
+        <button class="plat-card-btn">Generate Pika Prompt →</button>
+      </div>
+      <div class="plat-card vid-card" onclick="gotoGenerator('video','Luma AI')">
+        <span class="plat-card-icon">🌙</span>
+        <div class="plat-card-name">Luma AI</div>
+        <div class="plat-card-type vid">Video AI</div>
+        <div class="plat-card-desc">Dream Machine model for smooth, dreamlike video generation. Excellent for nature scenes and ambient visuals.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Dream Machine</span><span class="plat-card-tag">Smooth</span><span class="plat-card-tag">Nature</span></div>
+        <button class="plat-card-btn">Generate Luma Prompt →</button>
+      </div>
+      <div class="plat-card vid-card" onclick="gotoGenerator('video','Hailuo AI')">
+        <span class="plat-card-icon">🌊</span>
+        <div class="plat-card-name">Hailuo AI</div>
+        <div class="plat-card-type vid">Video AI</div>
+        <div class="plat-card-desc">MiniMax's video model. Strong with consistent character generation and narrative-driven video sequences.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">MiniMax</span><span class="plat-card-tag">Characters</span><span class="plat-card-tag">Narrative</span></div>
+        <button class="plat-card-btn">Generate Hailuo Prompt →</button>
+      </div>
+    </div>
+
+    <div class="section-divider">🎵 Music Generation</div>
+    <div class="plat-page-grid">
+      <div class="plat-card mus-card" onclick="gotoGenerator('music','Suno AI')">
+        <span class="plat-card-icon">🎵</span>
+        <div class="plat-card-name">Suno AI</div>
+        <div class="plat-card-type mus">Music AI</div>
+        <div class="plat-card-desc">Most popular AI music generator. Creates full songs with vocals in any genre. Best results with specific style tags.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Full Songs</span><span class="plat-card-tag">Vocals</span><span class="plat-card-tag">All Genres</span></div>
+        <button class="plat-card-btn">Generate Suno Prompt →</button>
+      </div>
+      <div class="plat-card mus-card" onclick="gotoGenerator('music','Udio')">
+        <span class="plat-card-icon">🎶</span>
+        <div class="plat-card-name">Udio</div>
+        <div class="plat-card-type mus">Music AI</div>
+        <div class="plat-card-desc">High-quality music generation with exceptional sound quality. Particularly strong with classical, jazz, and complex arrangements.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">High Quality</span><span class="plat-card-tag">Classical</span><span class="plat-card-tag">Jazz</span></div>
+        <button class="plat-card-btn">Generate Udio Prompt →</button>
+      </div>
+      <div class="plat-card mus-card" onclick="gotoGenerator('music','Boomy')">
+        <span class="plat-card-icon">💫</span>
+        <div class="plat-card-name">Boomy</div>
+        <div class="plat-card-type mus">Music AI</div>
+        <div class="plat-card-desc">Create and publish music to streaming platforms. Great for royalty-free background music and ambient tracks.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Streaming</span><span class="plat-card-tag">Royalty-free</span><span class="plat-card-tag">Publish</span></div>
+        <button class="plat-card-btn">Generate Boomy Prompt →</button>
+      </div>
+    </div>
+
+    <div class="section-divider">📱 Social & Content</div>
+    <div class="plat-page-grid">
+      <div class="plat-card soc-card" onclick="gotoGenerator('social','Instagram')">
+        <span class="plat-card-icon">📸</span>
+        <div class="plat-card-name">Instagram</div>
+        <div class="plat-card-type soc">Social Media</div>
+        <div class="plat-card-desc">Captions, hooks, and hashtags for Feed posts, Reels, and Stories. Optimized for Instagram's algorithm and reach.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Feed</span><span class="plat-card-tag">Reels</span><span class="plat-card-tag">Stories</span></div>
+        <button class="plat-card-btn">Generate Instagram Content →</button>
+      </div>
+      <div class="plat-card soc-card" onclick="gotoGenerator('social','Facebook')">
+        <span class="plat-card-icon">👤</span>
+        <div class="plat-card-name">Facebook</div>
+        <div class="plat-card-type soc">Social Media</div>
+        <div class="plat-card-desc">Engaging captions for Facebook posts, reels, and stories. Optimized for shares, reactions, and Facebook's reach algorithm.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Posts</span><span class="plat-card-tag">Reels</span><span class="plat-card-tag">Groups</span></div>
+        <button class="plat-card-btn">Generate Facebook Content →</button>
+      </div>
+      <div class="plat-card soc-card" onclick="gotoGenerator('social','TikTok')">
+        <span class="plat-card-icon">🎵</span>
+        <div class="plat-card-name">TikTok</div>
+        <div class="plat-card-type soc">Social Media</div>
+        <div class="plat-card-desc">Viral hooks, trending captions, and hashtags designed for TikTok's For You Page algorithm and short-form content.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">FYP</span><span class="plat-card-tag">Viral</span><span class="plat-card-tag">Short-form</span></div>
+        <button class="plat-card-btn">Generate TikTok Content →</button>
+      </div>
+      <div class="plat-card soc-card" onclick="gotoGenerator('social','Twitter')">
+        <span class="plat-card-icon">𝕏</span>
+        <div class="plat-card-name">Twitter / X</div>
+        <div class="plat-card-type soc">Social Media</div>
+        <div class="plat-card-desc">Punchy tweets, thread starters, and trending hashtags. Optimized for engagement, retweets, and viral reach on X.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Tweets</span><span class="plat-card-tag">Threads</span><span class="plat-card-tag">Trending</span></div>
+        <button class="plat-card-btn">Generate Twitter Content →</button>
+      </div>
+      <div class="plat-card soc-card" onclick="gotoGenerator('social','LinkedIn')">
+        <span class="plat-card-icon">💼</span>
+        <div class="plat-card-name">LinkedIn</div>
+        <div class="plat-card-type soc">Social Media</div>
+        <div class="plat-card-desc">Professional posts, thought leadership content, and business captions for maximum LinkedIn impressions and connections.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Professional</span><span class="plat-card-tag">B2B</span><span class="plat-card-tag">Thought Leadership</span></div>
+        <button class="plat-card-btn">Generate LinkedIn Content →</button>
+      </div>
+      <div class="plat-card soc-card" onclick="gotoGenerator('youtube')">
+        <span class="plat-card-icon">▶️</span>
+        <div class="plat-card-name">YouTube</div>
+        <div class="plat-card-type soc">Social Media</div>
+        <div class="plat-card-desc">SEO-optimized titles, full descriptions, tags, chapter markers, and thumbnail prompts for YouTube videos.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">SEO</span><span class="plat-card-tag">Titles</span><span class="plat-card-tag">Description</span></div>
+        <button class="plat-card-btn">Generate YouTube Content →</button>
+      </div>
+      <div class="plat-card soc-card" onclick="gotoGenerator('hashtag')">
+        <span class="plat-card-icon">#️⃣</span>
+        <div class="plat-card-name">Hashtag Engine</div>
+        <div class="plat-card-type soc">Social Media</div>
+        <div class="plat-card-desc">Generate 10–50 trending hashtags for any platform — sorted by size (mega/large/niche) for maximum reach.</div>
+        <div class="plat-card-tags"><span class="plat-card-tag">Trending</span><span class="plat-card-tag">Niche</span><span class="plat-card-tag">All Platforms</span></div>
+        <button class="plat-card-btn">Generate Hashtags →</button>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat"><div class="sv">17+</div><div class="sl">AI Platforms</div></div>
+      <div class="stat"><div class="sv">6</div><div class="sl">Content Types</div></div>
+      <div class="stat"><div class="sv">50+</div><div class="sl">Style Options</div></div>
+      <div class="stat"><div class="sv">∞</div><div class="sl">Prompts Generated</div></div>
+    </div>
+  </div>
+</div><!-- /page-platforms -->
+
+<!-- ===== TEMPLATES PAGE ===== -->
+<div id="page-templates" class="page">
+  <div class="app">
+    <div class="section-head" style="text-align:center;padding:40px 0 32px">
+      <h2>Ready-to-Use Templates</h2>
+      <p>One-click templates — fill your details and generate instantly</p>
+    </div>
+
+    <div class="section-divider">🔥 Trending Templates</div>
+    <div class="tmpl-grid">
+
+      <div class="tmpl-card" onclick="useTemplate('devotional_video')">
+        <span class="tmpl-card-emoji">🪔</span>
+        <div class="tmpl-card-title">Devotional Bhajan Music Video</div>
+        <div class="tmpl-card-desc">3D animated bhajan video prompt — deity dancing, temple background, flower petals, divine atmosphere. Perfect for Suno + Kling AI.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat vid">Video AI</span><span class="tmpl-card-cat mus">Music AI</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('yt_thumbnail')">
+        <span class="tmpl-card-emoji">🎯</span>
+        <div class="tmpl-card-title">YouTube Viral Thumbnail</div>
+        <div class="tmpl-card-desc">High-CTR thumbnail prompt with bold text, glowing character, dramatic background — optimized for Midjourney or Firefly.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat img">Image AI</span><span class="tmpl-card-cat yt">YouTube</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('instagram_reel')">
+        <span class="tmpl-card-emoji">📱</span>
+        <div class="tmpl-card-title">Instagram Viral Reel Caption</div>
+        <div class="tmpl-card-desc">Hook + caption + CTA + hashtags for maximum Instagram engagement. Choose your niche and get 3 caption variations.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat soc">Social Media</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('bollywood_song')">
+        <span class="tmpl-card-emoji">🎬</span>
+        <div class="tmpl-card-title">Bollywood Style Song</div>
+        <div class="tmpl-card-desc">Full Suno AI prompt for a Bollywood-style Hindi song — orchestra, melodic vocals, emotional theme, cinematic feel.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat mus">Music AI</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('cinematic_scene')">
+        <span class="tmpl-card-emoji">🎞</span>
+        <div class="tmpl-card-title">Epic Cinematic Scene</div>
+        <div class="tmpl-card-desc">Hollywood-level video prompt for Sora or Runway — wide establishing shot, dramatic lighting, slow motion, god rays.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat vid">Video AI</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('product_photo')">
+        <span class="tmpl-card-emoji">📦</span>
+        <div class="tmpl-card-title">Product Photography</div>
+        <div class="tmpl-card-desc">Studio-quality product photo prompt — clean background, professional lighting, shadow play, commercial grade output.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat img">Image AI</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('yt_seo')">
+        <span class="tmpl-card-emoji">▶️</span>
+        <div class="tmpl-card-title">YouTube SEO Package</div>
+        <div class="tmpl-card-desc">Full YouTube package — 3 title options, optimized description with timestamps, 15 tags, and chapter markers.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat yt">YouTube</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('lofi_music')">
+        <span class="tmpl-card-emoji">🎧</span>
+        <div class="tmpl-card-title">Lo-Fi Chill Music</div>
+        <div class="tmpl-card-desc">Suno AI prompt for lo-fi hip-hop beats — jazzy chords, vinyl crackle, rain sounds, study/relaxation vibe.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat mus">Music AI</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('fantasy_portrait')">
+        <span class="tmpl-card-emoji">🧙</span>
+        <div class="tmpl-card-title">Fantasy Character Portrait</div>
+        <div class="tmpl-card-desc">Midjourney prompt for a detailed fantasy character — warrior, mage, or deity — with armor, glowing effects, epic background.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat img">Image AI</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('motivational_post')">
+        <span class="tmpl-card-emoji">💪</span>
+        <div class="tmpl-card-title">Motivational Instagram Post</div>
+        <div class="tmpl-card-desc">Punchy motivational caption with power hook, 3 variations, emoji set, and 20 trending hashtags for maximum reach.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat soc">Social Media</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+      <div class="tmpl-card" onclick="useTemplate('facebook_post')">
+        <span class="tmpl-card-emoji">👤</span>
+        <div class="tmpl-card-title">Facebook Viral Post</div>
+        <div class="tmpl-card-desc">Shareable Facebook post caption with emotional hook, story-driven content, and trending hashtags designed for maximum shares and reactions.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat soc">Social Media</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('nature_video')">
+        <span class="tmpl-card-emoji">🌿</span>
+        <div class="tmpl-card-title">Nature / Landscape Video</div>
+        <div class="tmpl-card-desc">Stunning nature video prompt for Luma AI or Sora — sunrise, mountains, rivers, aerial shots, golden hour lighting.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat vid">Video AI</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+      <div class="tmpl-card" onclick="useTemplate('hashtag_pack')">
+        <span class="tmpl-card-emoji">#️⃣</span>
+        <div class="tmpl-card-title">Devotional Hashtag Pack</div>
+        <div class="tmpl-card-desc">30 trending hashtags for Indian devotional content — a mix of mega, medium, and niche tags for Instagram and YouTube.</div>
+        <div class="tmpl-card-meta"><span class="tmpl-card-cat soc">Social Media</span></div>
+        <button class="tmpl-use-btn">Use This Template →</button>
+      </div>
+
+    </div>
+    <div style="height:60px"></div>
+  </div>
+</div><!-- /page-templates -->
+
+<div class="toast" id="toast">✓ Copied to clipboard!</div>
+
+<script>
+// ─── STATE ───
+let activeCat = 'image';
+const loaderMsgs = {
+  image:['Crafting your visual prompt…','Analyzing style and mood…','Building perfect image description…'],
+  video:['Scripting your video scene…','Composing cinematic directions…','Setting camera angles and mood…'],
+  music:['Composing your music prompt…','Setting the beat and vibe…','Orchestrating instruments…'],
+  social:['Analyzing platform trends…','Finding viral keywords…','Crafting engagement-optimized captions…'],
+  youtube:['Analyzing YouTube trends…','Finding viral keywords…','Crafting SEO-optimized content…'],
+  hashtag:['Finding trending hashtags…','Analyzing niche tags…','Building hashtag strategy…'],
+};
+
+// ─── CATEGORY TABS ───
+document.querySelectorAll('.cat-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.cat-section').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    activeCat = tab.dataset.cat;
+    document.getElementById('cat-'+activeCat).classList.add('active');
+    document.getElementById('output-wrap').classList.remove('show');
+  });
+});
+
+// ─── PLATFORM BTNS ───
+document.querySelectorAll('.plat-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    btn.closest('.platform-grid').querySelectorAll('.plat-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// ─── CHIPS ───
+document.querySelectorAll('.chip').forEach(c=>{
+  c.addEventListener('click',()=>c.classList.toggle('active'));
+});
+
+function getChips(id){
+  return [...document.querySelectorAll('#'+id+' .chip.active')].map(c=>c.dataset.v).filter(Boolean);
+}
+function getActivePlatform(section){
+  const pg = document.querySelector('#cat-'+section+' .platform-grid');
+  if(!pg) return '';
+  const ab = pg.querySelector('.plat-btn.active');
+  return ab ? ab.dataset.p : '';
+}
+
+// ─── GENERATE ───
+async function generate(cat){
+  const loader = document.getElementById('main-loader');
+  const output = document.getElementById('output-wrap');
+  const lmsg   = document.getElementById('loader-msg');
+  const msgs   = loaderMsgs[cat];
+
+  output.classList.remove('show');
+  loader.classList.add('show');
+  lmsg.textContent = msgs[Math.floor(Math.random()*msgs.length)];
+  document.getElementById('out-tabs').innerHTML='';
+  document.getElementById('out-panes').innerHTML='';
+
+  const prompt = buildPrompt(cat);
+
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await resp.json();
+    const rawText = data.content.map(i=>i.text||'').join('');
+    // Clean markdown fences
+    let raw = rawText.replace(/```json\s*/g,'').replace(/```/g,'').trim();
+    // Extract JSON object if there's surrounding text
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if(jsonMatch) raw = jsonMatch[0];
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch(parseErr) {
+      // Try fixing unescaped newlines in string values
+      const fixed = raw.replace(/:\s*"((?:[^"\\]|\\.)*)"/g, (m, val) => {
+        return ': "' + val.replace(/\n/g, '\\n').replace(/\r/g,'') + '"';
+      });
+      parsed = JSON.parse(fixed);
+    }
+    renderOutput(cat, parsed);
+    output.classList.add('show');
+  }catch(e){
+    alert('Something went wrong. Please try again.\n'+e.message);
+    console.error(e);
+  }finally{
+    loader.classList.remove('show');
+  }
+}
+
+// ─── PROMPT BUILDERS ───
+function buildPrompt(cat){
+  const base = `You are an expert AI content strategist. Return ONLY valid JSON, no markdown, no backticks, no preamble.`;
+
+  if(cat==='image'){
+    const platform = getActivePlatform('image');
+    const subject  = document.getElementById('img-subject').value||'a beautiful scene';
+    const style    = document.getElementById('img-style').value;
+    const light    = document.getElementById('img-light').value;
+    const cam      = document.getElementById('img-cam').value;
+    const mood     = document.getElementById('img-mood').value;
+    const ratio    = document.getElementById('img-ratio').value;
+    const colors   = getChips('img-colors').join(', ')||'warm gold';
+    const extra    = document.getElementById('img-extra').value;
+    const neg      = document.getElementById('img-neg').value;
+    return `${base}
+Platform: ${platform}. Generate optimized image prompts.
+Subject: ${subject}
+Style: ${style}, Lighting: ${light}, Camera: ${cam}
+Mood: ${mood}, Ratio: ${ratio}, Colors: ${colors}
+Extra: ${extra}, Avoid: ${neg}
+
+Return JSON:
+{
+  "mainPrompt": "detailed optimized prompt for ${platform} (200-350 words)",
+  "shortPrompt": "concise version under 100 words",
+  "negativePrompt": "comprehensive negative prompt",
+  "styleParams": "platform-specific parameters like --ar --style --v for Midjourney etc",
+  "colorPalette": ["#hex1","#hex2","#hex3","#hex4"],
+  "tips": ["tip1 specific to ${platform}","tip2","tip3"],
+  "variations": ["variation idea 1","variation idea 2","variation idea 3"]
+}`;
+  }
+
+  if(cat==='video'){
+    const platform = getActivePlatform('video');
+    const type  = document.getElementById('vid-type').value;
+    const style = document.getElementById('vid-style').value;
+    const scene = document.getElementById('vid-scene').value||'a cinematic scene';
+    const cam   = document.getElementById('vid-cam').value;
+    const pace  = document.getElementById('vid-pace').value;
+    const dur   = document.getElementById('vid-dur').value;
+    const mood  = document.getElementById('vid-mood').value;
+    const fx    = getChips('vid-fx').join(', ');
+    return `${base}
+Platform: ${platform}. Generate optimized video prompts.
+Type: ${type}, Style: ${style}, Scene: ${scene}
+Camera: ${cam}, Pacing: ${pace}, Duration: ${dur}, Mood: ${mood}, FX: ${fx}
+
+Return JSON:
+{
+  "mainPrompt": "full detailed cinematic video prompt optimized for ${platform}",
+  "openingShot": "detailed opening shot description (5 seconds)",
+  "mainAction": "main action/scene detailed prompt",
+  "closingShot": "closing shot description",
+  "cameraDirections": "specific camera movement instructions",
+  "negativePrompt": "what to avoid",
+  "tips": ["${platform}-specific tip 1","tip 2","tip 3"],
+  "shotList": [{"time":"0:00-0:05","shot":"desc"},{"time":"0:05-0:15","shot":"desc"},{"time":"0:15-0:25","shot":"desc"}]
+}`;
+  }
+
+  if(cat==='music'){
+    const platform = getActivePlatform('music');
+    const genre  = document.getElementById('mus-genre').value;
+    const mood   = document.getElementById('mus-mood').value;
+    const tempo  = document.getElementById('mus-tempo').value;
+    const vocal  = document.getElementById('mus-vocal').value;
+    const inst   = getChips('mus-inst').join(', ')||'guitar, piano';
+    const theme  = document.getElementById('mus-theme').value||'an emotional song';
+    const lang   = document.getElementById('mus-lang').value;
+    return `${base}
+Platform: ${platform}. Generate optimized music prompts.
+Genre: ${genre}, Mood: ${mood}, Tempo: ${tempo}
+Vocal: ${vocal}, Instruments: ${inst}, Theme: ${theme}, Language: ${lang}
+
+Return JSON:
+{
+  "stylePrompt": "comma-separated style tags for ${platform} under 200 chars",
+  "songDescription": "detailed song description for ${platform} (3-5 sentences)",
+  "lyricsStarter": "first verse or chorus lyrics starter in ${lang}",
+  "structureSuggestion": "suggested song structure (verse/chorus/bridge)",
+  "moodBoard": ["sound reference 1","sound reference 2","sound reference 3"],
+  "tips": ["${platform}-specific tip 1","tip 2","tip 3"]
+}`;
+  }
+
+  if(cat==='social'){
+    const platform = document.getElementById('soc-platform').value;
+    const niche    = document.getElementById('soc-niche').value;
+    const about    = document.getElementById('soc-about').value||'a lifestyle post';
+    const tone     = document.getElementById('soc-tone').value;
+    const len      = document.getElementById('soc-len').value;
+    const audience = document.getElementById('soc-audience').value||'general audience';
+    const cta      = document.getElementById('soc-cta').value;
+    return `${base}
+You are a viral social media strategist and trend analyst. Deeply analyze what is currently trending on ${platform} for this niche and topic, then generate maximum-reach content.
+
+Platform: ${platform}. Niche: ${niche}. About: ${about}. Tone: ${tone}. Length: ${len}. Audience: ${audience}. CTA: ${cta}.
+
+STRICT JSON RULES: All string values must be single-line. No actual newlines inside any string value. No unescaped double quotes.
+
+Return exactly this JSON:
+{
+  "hook": "irresistible attention-grabbing opening line under 15 words",
+  "caption1": "full caption version 1 with ${tone} tone — optimized for ${platform}",
+  "caption2": "full caption version 2 from a different emotional angle",
+  "caption3": "full caption version 3 in storytelling format — most shareable",
+  "emojiSet": "6-8 most relevant trending emojis for this content",
+  "hashtags": ["#viral1","#trending2","#niche3","#medium4","#small5","#tag6","#tag7","#tag8","#tag9","#tag10","#tag11","#tag12","#tag13","#tag14","#tag15","#tag16","#tag17","#tag18","#tag19","#tag20"],
+  "ctaLine": "compelling platform-specific call to action",
+  "bestPostTime": "specific best day and time to post on ${platform} for this niche",
+  "tips": ["${platform}-specific algorithm tip","engagement boosting tip","virality tip"],
+  "viralScore": "score like 84",
+  "reachEstimate": "estimated reach like 50K-200K",
+  "topTrendingTerms": [
+    {"term": "most searched/trending term 1 on ${platform} for this topic", "volume": "volume like 1.8M searches", "trend": "Rising"},
+    {"term": "trending term 2", "volume": "1.2M searches", "trend": "Hot"},
+    {"term": "trending term 3", "volume": "760K searches", "trend": "Stable"},
+    {"term": "trending term 4", "volume": "430K searches", "trend": "Rising"},
+    {"term": "trending term 5", "volume": "210K searches", "trend": "New"}
+  ],
+  "viralKeywords": ["top viral keyword 1","viral keyword 2","viral keyword 3","viral keyword 4","viral keyword 5","viral keyword 6"],
+  "risingHashtags": [
+    {"tag": "#risingTag1", "growth": "+420% this week"},
+    {"tag": "#risingTag2", "growth": "+280% this week"},
+    {"tag": "#risingTag3", "growth": "+195% this week"}
+  ],
+  "contentAngles": ["unique content angle that is going viral on ${platform}","angle 2","angle 3"],
+  "platformInsights": [
+    "Key ${platform} algorithm insight for this niche right now",
+    "What type of posts get most shares/saves for this topic",
+    "Best visual or format style performing on ${platform} for this content"
+  ]
+}`;
+  }
+
+  if(cat==='youtube'){
+    const topic    = document.getElementById('yt-topic').value||'a YouTube video';
+    const niche    = document.getElementById('yt-niche').value;
+    const len      = document.getElementById('yt-len').value;
+    const audience = document.getElementById('yt-audience').value||'general viewers';
+    const points   = document.getElementById('yt-points').value;
+    const thumb    = document.getElementById('yt-thumb').value;
+    const mood     = document.getElementById('yt-mood').value;
+    return `${base}
+You are a YouTube SEO expert and trend analyst. Analyze the topic deeply, simulate what terms are most searched on YouTube for this topic, and generate complete viral-optimized content.
+
+Topic: ${topic}. Niche: ${niche}. Length: ${len}. Audience: ${audience}. Key points: ${points}. Mood: ${mood}.
+
+STRICT JSON RULES: All string values must be single-line. Use \\n for line breaks in description. No actual newlines inside any string value. No unescaped double quotes inside string values.
+
+Return exactly this JSON:
+{
+  "title1": "best SEO title under 60 chars — include main high-volume keyword",
+  "title2": "curiosity/question hook title under 60 chars",
+  "title3": "emotional power or number-based title under 60 chars",
+  "description": "INTRO hook sentence.\\n\\nWhat you will see in this video: [key points].\\n\\nTIMESTAMPS:\\n0:00 Intro\\n0:30 Main Content\\n1:30 Key Moment\\n2:30 Outro\\n\\nKeywords: [5 high-volume SEO keywords for this topic].\\n\\nSubscribe for more [niche] content!\\nInstagram: [link] | Facebook: [link]",
+  "tags": ["high-vol-tag1","high-vol-tag2","mid-vol-tag3","mid-vol-tag4","niche-tag5","niche-tag6","long-tail-tag7","long-tail-tag8","trending-tag9","tag10","tag11","tag12","tag13","tag14","tag15"],
+  "thumbnailPrompt": "detailed AI image prompt for high-CTR thumbnail",
+  "chapterMarkers": [{"time":"0:00","title":"Intro"},{"time":"0:30","title":"Main Section"},{"time":"1:30","title":"Key Highlight"}],
+  "seoScore": "score like 8.5/10",
+  "tips": ["YouTube SEO tip 1","engagement tip 2","algorithm tip 3"],
+  "viralScore": "score like 87",
+  "competitionLevel": "Low or Medium or High",
+  "bestUploadTime": "e.g. Tuesday-Thursday 6PM-9PM IST",
+  "topSearchedKeywords": [
+    {"keyword": "most searched term 1 for this topic on YouTube", "volume": "search volume like 2.1M/mo", "competition": "Low"},
+    {"keyword": "most searched term 2", "volume": "1.4M/mo", "competition": "Medium"},
+    {"keyword": "most searched term 3", "volume": "890K/mo", "competition": "Medium"},
+    {"keyword": "most searched term 4", "volume": "540K/mo", "competition": "Low"},
+    {"keyword": "most searched term 5", "volume": "320K/mo", "competition": "Low"}
+  ],
+  "risingKeywords": [
+    {"keyword": "fast-growing search term 1", "growth": "+340% this month"},
+    {"keyword": "fast-growing search term 2", "growth": "+210% this month"},
+    {"keyword": "fast-growing search term 3", "growth": "+185% this month"}
+  ],
+  "viralKeywords": ["viral keyword 1","viral keyword 2","viral keyword 3","viral keyword 4","viral keyword 5","viral keyword 6"],
+  "longTailKeywords": ["long tail phrase 1","long tail phrase 2","long tail phrase 3","long tail phrase 4"],
+  "platformInsights": [
+    "YouTube algorithm insight specific to this niche",
+    "Best thumbnail strategy for this topic",
+    "Engagement hook tip for first 30 seconds"
+  ],
+  "competitorAngles": ["unique angle 1 competitors are missing","unique angle 2","unique angle 3"]
+}`;
+  }
+
+  if(cat==='hashtag'){
+    const topic    = document.getElementById('ht-topic').value||'general content';
+    const platform = document.getElementById('ht-platform').value;
+    const niche    = document.getElementById('ht-niche').value;
+    const strategy = document.getElementById('ht-strategy').value;
+    const lang     = document.getElementById('ht-lang').value;
+    const count    = document.getElementById('ht-count').value;
+    return `${base}
+Generate ${count} hashtags for ${platform}.
+Topic: ${topic}, Niche: ${niche}, Strategy: ${strategy}, Language: ${lang}
+
+Return JSON:
+{
+  "megaTags": ["#tag (100M+ posts)","#tag","#tag"],
+  "largeTags": ["#tag (10M-100M)","#tag","#tag","#tag","#tag"],
+  "mediumTags": ["#tag (1M-10M)","#tag","#tag","#tag","#tag"],
+  "nicheSmallTags": ["#tag (under 1M)","#tag","#tag","#tag","#tag","#tag","#tag"],
+  "trendingNow": ["#currentlyTrending1","#currentlyTrending2","#currentlyTrending3"],
+  "allHashtags": "all hashtags in one copyable block",
+  "strategy": "2-3 sentence explanation of how to use these hashtags",
+  "tips": ["platform-specific hashtag tip 1","tip 2","tip 3"]
+}`;
+  }
+}
+
+// ─── RENDER OUTPUT ───
+function renderOutput(cat, data){
+  const tabsEl  = document.getElementById('out-tabs');
+  const panesEl = document.getElementById('out-panes');
+
+  const configs = {
+    image:{
+      tabs:['Main Prompt','Short Prompt','Negative','Tips & Params'],
+      panes:[
+        ()=>`${outSection('Main Prompt',data.mainPrompt,'violet')}
+             ${data.colorPalette?'<div class="out-label"><span class="dot" style="background:var(--cyan)"></span>Color Palette</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'+(data.colorPalette||[]).map(c=>`<div style="width:36px;height:36px;border-radius:6px;background:${c};border:1px solid #2A2F45" title="${c}"></div>`).join('')+'</div>':''}
+             ${data.variations?outSection('Variation Ideas',data.variations.join('\n\n'),'cyan'):''}`,
+        ()=>outSection('Short Prompt',data.shortPrompt,'cyan'),
+        ()=>outSection('Negative Prompt',data.negativePrompt,'pink'),
+        ()=>`${outSection('Platform Parameters',data.styleParams,'yellow')}${tipsSection(data.tips)}`
+      ]
+    },
+    video:{
+      tabs:['Full Prompt','Shot List','Camera','Tips'],
+      panes:[
+        ()=>`${outSection('Main Video Prompt',data.mainPrompt,'violet')}`,
+        ()=>`${outSection('Opening Shot',data.openingShot,'cyan')}${outSection('Main Action',data.mainAction,'violet')}${outSection('Closing Shot',data.closingShot,'green')}${shotListSection(data.shotList)}`,
+        ()=>`${outSection('Camera Directions',data.cameraDirections,'yellow')}${outSection('Negative Prompt',data.negativePrompt,'pink')}`,
+        ()=>tipsSection(data.tips)
+      ]
+    },
+    music:{
+      tabs:['Style Prompt','Song Description','Lyrics Starter','Tips'],
+      panes:[
+        ()=>outSection('Suno/Udio Style Prompt',data.stylePrompt,'violet'),
+        ()=>`${outSection('Song Description',data.songDescription,'cyan')}${outSection('Song Structure',data.structureSuggestion,'green')}`,
+        ()=>`${outSection('Lyrics Starter',data.lyricsStarter,'yellow')}${data.moodBoard?outSection('Sound References',data.moodBoard.join('\n'),'pink'):''}`,
+        ()=>tipsSection(data.tips)
+      ]
+    },
+    social:{
+      tabs:['Captions','Hook + CTA','Hashtags','🔥 Trend Analysis'],
+      panes:[
+        ()=>`${outSection('Caption Version 1',data.caption1,'violet')}${outSection('Caption Version 2',data.caption2,'cyan')}${outSection('Caption Version 3',data.caption3,'green')}`,
+        ()=>`${outSection('Hook Line',data.hook,'yellow')}${outSection('CTA Line',data.ctaLine,'pink')}${outSection('Best Post Time',data.bestPostTime,'cyan')}${data.emojiSet?'<div class="out-label"><span class="dot" style="background:var(--yellow)"></span>Emoji Set</div><div class="prompt-card" style="font-size:1.4rem;letter-spacing:.1em">'+data.emojiSet+'</div>':''}`,
+        ()=>hashtagSection(data.hashtags),
+        ()=>trendAnalysisSection(data, 'social')
+      ]
+    },
+    youtube:{
+      tabs:['Titles','Description','Tags','🔥 Trend Analysis','Thumbnail'],
+      panes:[
+        ()=>`${outSection('Title Option 1 — SEO',data.title1,'violet')}${outSection('Title Option 2 — Hook',data.title2,'cyan')}${outSection('Title Option 3 — Power',data.title3,'green')}${chaptersSection(data.chapterMarkers)}`,
+        ()=>outSection('Full YouTube Description',data.description,'violet'),
+        ()=>hashtagSection(data.tags),
+        ()=>trendAnalysisSection(data, 'youtube'),
+        ()=>`${outSection('Thumbnail AI Prompt',data.thumbnailPrompt,'yellow')}${tipsSection(data.tips)}`
+      ]
+    },
+    hashtag:{
+      tabs:['All Tags','By Size','Trending','Strategy'],
+      panes:[
+        ()=>`<div class="out-label"><span class="dot"></span>Copy All Hashtags</div><div class="prompt-card">${data.allHashtags||''}</div><div class="copy-row"><button class="copy-btn" onclick="copyText(this,'${escStr(data.allHashtags||'')}')">Copy All</button></div>`,
+        ()=>`${data.megaTags?outSection('Mega Tags (100M+)',data.megaTags.join('  '),'pink'):''}${data.largeTags?outSection('Large Tags (10M–100M)',data.largeTags.join('  '),'violet'):''}${data.mediumTags?outSection('Medium Tags (1M–10M)',data.mediumTags.join('  '),'cyan'):''}${data.nicheSmallTags?outSection('Niche Tags (<1M)',data.nicheSmallTags.join('  '),'green'):''}`,
+        ()=>data.trendingNow?`<div class="out-label"><span class="dot" style="background:var(--yellow)"></span>Trending Now</div><div class="hashtag-cloud">${data.trendingNow.map(t=>`<span class="htag" onclick="copyTag('${t}')">${t}</span>`).join('')}</div>`:outSection('Trending','No data','yellow'),
+        ()=>`${outSection('Hashtag Strategy',data.strategy,'violet')}${tipsSection(data.tips)}`
+      ]
+    }
+  };
+
+  const cfg = configs[cat];
+  cfg.tabs.forEach((name,i)=>{
+    const tab = document.createElement('div');
+    tab.className='out-tab'+(i===0?' active':'');
+    tab.textContent=name;
+    tab.onclick=()=>{
+      tabsEl.querySelectorAll('.out-tab').forEach(t=>t.classList.remove('active'));
+      panesEl.querySelectorAll('.out-pane').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      panesEl.querySelectorAll('.out-pane')[i].classList.add('active');
+    };
+    tabsEl.appendChild(tab);
+
+    const pane = document.createElement('div');
+    pane.className='out-pane'+(i===0?' active':'');
+    pane.innerHTML = cfg.panes[i]();
+    panesEl.appendChild(pane);
+  });
+
+  // re-bind chips in hashtag cloud
+  document.querySelectorAll('.htag').forEach(t=>{
+    t.onclick=()=>{navigator.clipboard.writeText(t.textContent);showToast();};
+  });
+}
+
+function outSection(label,content,color='violet'){
+  const colorMap={violet:'var(--violet)',cyan:'var(--cyan)',pink:'var(--pink)',green:'var(--green)',yellow:'var(--yellow)'};
+  const c=colorMap[color]||'var(--violet)';
+  const safe=(content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<div class="out-section">
+    <div class="out-label"><span class="dot" style="background:${c}"></span>${label}</div>
+    <div class="prompt-card">${safe}</div>
+    <div class="copy-row"><button class="copy-btn" onclick="copyText(this,${JSON.stringify(content||'')})">Copy ${label}</button></div>
+  </div>`;
+}
+
+function tipsSection(tips){
+  if(!tips||!tips.length) return '';
+  return `<div class="tip-box"><strong>💡 Pro Tips</strong><br/>${tips.map(t=>'• '+t).join('<br/>')}</div>`;
+}
+
+function hashtagSection(tags){
+  if(!tags||!tags.length) return '<p>No hashtags generated.</p>';
+  const cleaned=tags.map(t=>t.startsWith('#')?t:'#'+t);
+  return `<div class="out-label"><span class="dot" style="background:var(--cyan)"></span>Click any tag to copy</div>
+    <div class="hashtag-cloud">${cleaned.map(t=>`<span class="htag">${escHtml(t)}</span>`).join('')}</div>
+    <div class="copy-row" style="margin-top:14px"><button class="copy-btn" onclick="copyText(this,${JSON.stringify(cleaned.join(' '))})">Copy All Tags</button></div>`;
+}
+
+function shotListSection(shots){
+  if(!shots||!shots.length) return '';
+  return `<div class="out-section"><div class="out-label"><span class="dot" style="background:var(--yellow)"></span>Shot List</div>
+    <div style="display:flex;flex-direction:column;gap:8px">${shots.map(s=>`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;display:flex;gap:12px;align-items:flex-start"><span style="color:var(--yellow);font-family:'JetBrains Mono',monospace;font-size:.75rem;white-space:nowrap;margin-top:2px">${s.time||''}</span><span style="font-size:.85rem;color:var(--muted2)">${(s.shot||'').replace(/</g,'&lt;')}</span></div>`).join('')}</div></div>`;
+}
+
+function chaptersSection(chapters){
+  if(!chapters||!chapters.length) return '';
+  const text=chapters.map(c=>`${c.time} ${c.title}`).join('\n');
+  return `<div class="out-section"><div class="out-label"><span class="dot" style="background:var(--cyan)"></span>Chapter Markers</div>
+    <div class="prompt-card">${escHtml(text)}</div>
+    <div class="copy-row"><button class="copy-btn" onclick="copyText(this,${JSON.stringify(text)})">Copy Chapters</button></div></div>`;
+}
+
+function escHtml(s){return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escStr(s){return (s||'').replace(/'/g,"\\'");}
+
+// ─── COPY ───
+function copyText(btn,text){
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent='✓ Copied!';
+    btn.classList.add('copied');
+    showToast();
+    setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied');},2000);
+  });
+}
+function copyTag(text){
+  navigator.clipboard.writeText(text).then(()=>showToast());
+}
+function showToast(){
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// ─── TREND ANALYSIS RENDERER ───
+function trendAnalysisSection(data, type) {
+  const isYT = type === 'youtube';
+  const keywords = isYT ? (data.topSearchedKeywords||[]) : (data.topTrendingTerms||[]);
+  const rising   = data.risingKeywords || data.risingHashtags || [];
+  const viral    = data.viralKeywords || [];
+  const insights = data.platformInsights || [];
+  const competitors = isYT ? (data.competitorAngles||[]) : (data.contentAngles||[]);
+
+  // Score cards
+  const viralScore = data.viralScore || (isYT ? '82' : '79');
+  const competition = data.competitionLevel || 'Medium';
+  const bestTime = data.bestUploadTime || data.bestPostTime || 'Tue–Thu 6–9 PM';
+  const reach = data.reachEstimate || (isYT ? '10K–100K views' : '50K–200K reach');
+
+  const compColor = competition === 'Low' ? 'green' : competition === 'High' ? 'fire' : 'yellow';
+
+  let html = `
+  <div class="score-ring-wrap">
+    <div class="score-ring">
+      <div class="sr-val fire">${viralScore}</div>
+      <div class="sr-lbl">Viral Score</div>
+    </div>
+    <div class="score-ring">
+      <div class="sr-val ${compColor}">${competition}</div>
+      <div class="sr-lbl">Competition</div>
+    </div>
+    <div class="score-ring">
+      <div class="sr-val violet">${isYT ? (data.seoScore||'8/10') : ''+(data.viralScore||'') }</div>
+      <div class="sr-lbl">${isYT ? 'SEO Score' : 'Reach Est.'}</div>
+    </div>
+    <div class="score-ring">
+      <div class="sr-val green" style="font-size:.9rem;margin-top:4px">${bestTime}</div>
+      <div class="sr-lbl">${isYT ? 'Best Upload Time' : 'Best Post Time'}</div>
+    </div>
+  </div>`;
+
+  // Top searched keywords
+  if(keywords.length) {
+    html += `<div class="out-label"><span class="dot" style="background:var(--pink)"></span>${isYT ? 'Top Searched Keywords on YouTube' : 'Top Trending Terms on Platform'}</div>
+    <div class="trend-card" style="margin-bottom:14px">
+      <div class="kw-list">`;
+    keywords.forEach((k,i) => {
+      const pct = Math.max(20, 100 - i*17);
+      const klass = i < 2 ? 'hot' : i < 4 ? 'med' : 'low';
+      const kw = typeof k === 'object' ? k.keyword||k.term : k;
+      const vol = typeof k === 'object' ? k.volume||'' : '';
+      const comp = typeof k === 'object' ? k.competition||k.trend||'' : '';
+      html += `<div class="kw-row">
+        <span class="kw-word">${escHtml(kw)}</span>
+        <div class="kw-bar-wrap"><div class="kw-bar ${klass}" style="width:${pct}%"></div></div>
+        <span class="kw-vol">${escHtml(vol)}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+
+    // Copy all keywords
+    const kwText = keywords.map(k => typeof k === 'object' ? k.keyword||k.term : k).join(', ');
+    html += `<div class="copy-row" style="margin-bottom:16px"><button class="copy-btn" onclick="copyText(this,${JSON.stringify(kwText)})">Copy All Keywords</button></div>`;
+  }
+
+  // Viral keywords chips
+  if(viral.length) {
+    html += `<div class="out-label"><span class="dot" style="background:var(--orange)"></span>Viral Keywords — Click to Copy</div>
+    <div class="viral-tags" style="margin-bottom:16px">`;
+    const classes = ['fire','hot','grow','niche'];
+    viral.forEach((v,i) => {
+      html += `<span class="vtag ${classes[i%4]}" onclick="copyText(this,${JSON.stringify(v)})">${escHtml(v)}</span>`;
+    });
+    html += `</div>`;
+    const allViral = viral.join(' ');
+    html += `<div class="copy-row" style="margin-bottom:16px"><button class="copy-btn" onclick="copyText(this,${JSON.stringify(allViral)})">Copy All Viral Keywords</button></div>`;
+  }
+
+  // Rising keywords / hashtags
+  if(rising.length) {
+    html += `<div class="trend-grid">
+    <div class="trend-card">
+      <div class="trend-card-title"><span class="dot" style="background:var(--yellow)"></span>Rising Fast 🚀</div>`;
+    rising.forEach(r => {
+      const term = typeof r === 'object' ? r.keyword||r.tag : r;
+      const grow = typeof r === 'object' ? r.growth||'' : '';
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+        <span style="font-size:.8rem;color:var(--text);font-weight:500">${escHtml(term)}</span>
+        <span style="font-size:.7rem;color:var(--yellow);font-weight:700;white-space:nowrap">${escHtml(grow)}</span>
+      </div>`;
+    });
+    html += `</div>`;
+
+    // Platform insights
+    if(insights.length) {
+      html += `<div class="trend-card">
+        <div class="trend-card-title"><span class="dot" style="background:var(--cyan)"></span>Algorithm Insights</div>
+        <div class="platform-insights">`;
+      insights.forEach(ins => {
+        html += `<div class="insight-row"><span class="insight-icon">💡</span><span class="insight-text">${escHtml(ins)}</span></div>`;
+      });
+      html += `</div></div>`;
+    }
+    html += `</div>`;
+  }
+
+  // Competitor / Content Angles
+  if(competitors.length) {
+    const title = isYT ? 'Untapped Angles (Beat Competitors)' : 'Viral Content Angles';
+    html += `<div class="out-label"><span class="dot" style="background:var(--green)"></span>${title}</div>
+    <div class="competitor-chips" style="margin-bottom:16px">`;
+    competitors.forEach(c => {
+      html += `<span class="comp-chip">${escHtml(c)}</span>`;
+    });
+    html += `</div>`;
+  }
+
+  // Long tail (YouTube only)
+  if(isYT && data.longTailKeywords && data.longTailKeywords.length) {
+    html += `<div class="out-label"><span class="dot" style="background:var(--violet)"></span>Long-Tail SEO Phrases</div>
+    <div class="prompt-card" style="margin-bottom:8px">${data.longTailKeywords.map(k=>escHtml(k)).join('\n')}</div>
+    <div class="copy-row" style="margin-bottom:16px"><button class="copy-btn" onclick="copyText(this,${JSON.stringify(data.longTailKeywords.join('\n'))})">Copy Long-Tail Keywords</button></div>`;
+  }
+
+  return html;
+}
+
+
+// ─── PAGE NAVIGATION ───
+function goHome() {
+  switchPage('generator');
+  // also reset to first cat tab
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.cat-section').forEach(s => s.classList.remove('active'));
+  const firstTab = document.querySelector('.cat-tab[data-cat="image"]');
+  if(firstTab) { firstTab.classList.add('active'); activeCat = 'image'; }
+  const firstSec = document.getElementById('cat-image');
+  if(firstSec) firstSec.classList.add('active');
+  document.getElementById('output-wrap').classList.remove('show');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function switchPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  const pill = document.querySelector(`.nav-pill[data-page="${pageId}"]`);
+  if(pill) pill.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+document.querySelectorAll('.nav-pill[data-page]').forEach(pill => {
+  pill.addEventListener('click', () => switchPage(pill.dataset.page));
+});
+
+// ─── GOTO GENERATOR (from platform page) ───
+function gotoGenerator(cat, platform) {
+  switchPage('generator');
+  setTimeout(() => {
+    // Switch category
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.cat-section').forEach(s => s.classList.remove('active'));
+    const tab = document.querySelector(`.cat-tab[data-cat="${cat}"]`);
+    if(tab) { tab.classList.add('active'); activeCat = cat; }
+    const section = document.getElementById('cat-' + cat);
+    if(section) section.classList.add('active');
+
+    // Select platform button (image/video/music) or dropdown (social)
+    if(platform) {
+      const pg = document.querySelector('#cat-' + cat + ' .platform-grid');
+      if(pg) {
+        pg.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('active'));
+        const target = [...pg.querySelectorAll('.plat-btn')].find(b => b.dataset.p === platform);
+        if(target) target.classList.add('active');
+      }
+      // For social: also pre-select the dropdown
+      const socDrop = document.getElementById('soc-platform');
+      if(socDrop && cat === 'social') {
+        const platformMap = {
+          'Instagram': 'Instagram Feed Post',
+          'Facebook':  'Facebook Post',
+          'TikTok':    'TikTok',
+          'Twitter':   'Twitter / X',
+          'LinkedIn':  'LinkedIn',
+        };
+        const val = platformMap[platform] || platform;
+        [...socDrop.options].forEach(o => { if(o.text === val || o.value === val) socDrop.value = o.value; });
+      }
+    }
+    // Scroll to cat tabs
+    document.querySelector('.cat-tabs').scrollIntoView({behavior:'smooth', block:'start'});
+  }, 100);
+}
+
+// ─── TEMPLATES ───
+const TEMPLATES = {
+  devotional_video: {
+    cat: 'video', platform: 'Kling AI',
+    fill: {
+      'vid-type': 'Music Video',
+      'vid-style': 'Mythological / Epic Fantasy',
+      'vid-scene': 'Lord Hanuman dancing joyfully in front of Ayodhya palace, flower petals raining, divine golden aura, festive atmosphere',
+      'vid-cam': 'Slow zoom in',
+      'vid-pace': 'Slow Motion — cinematic',
+      'vid-dur': '60 seconds',
+      'vid-mood': 'Peaceful and devotional',
+    },
+    chips: { 'vid-fx': ['flower petals floating', 'divine golden aura', 'god rays volumetric light'] }
+  },
+  yt_thumbnail: {
+    cat: 'image', platform: 'Adobe Firefly',
+    fill: {
+      'img-subject': 'YouTube thumbnail with glowing character and bold title text',
+      'img-style': 'Digital Art / Concept Art',
+      'img-light': 'Dramatic Cinematic Lighting',
+      'img-cam': 'Low Angle Hero Shot',
+      'img-mood': 'Epic / Majestic',
+      'img-ratio': '16:9',
+      'img-extra': 'Bold 3D golden text, glowing outline on character, high contrast background',
+    },
+    chips: { 'img-colors': ['warm gold and saffron', 'sunset orange and pink'] }
+  },
+  instagram_reel: {
+    cat: 'social',
+    fill: {
+      'soc-platform': 'Instagram Reel',
+      'soc-niche': 'Devotional / Spiritual',
+      'soc-about': 'A beautiful devotional reel with divine visuals and bhajan music',
+      'soc-tone': 'Devotional / Spiritual',
+      'soc-len': 'Medium — 3–5 lines',
+      'soc-audience': 'Hindu devotees, spiritual seekers, Indian audience',
+      'soc-cta': 'Share with friends',
+    }
+  },
+  bollywood_song: {
+    cat: 'music', platform: 'Suno AI',
+    fill: {
+      'mus-genre': 'Bollywood Pop',
+      'mus-mood': 'Uplifting and joyful',
+      'mus-tempo': 'Medium — 80–95 BPM',
+      'mus-vocal': 'Male baritone — soulful',
+      'mus-theme': 'A joyful Bollywood song about love, celebration and life',
+      'mus-lang': 'Hindi',
+    },
+    chips: { 'mus-inst': ['tabla', 'strings orchestra', 'piano', 'synthesizer'] }
+  },
+  cinematic_scene: {
+    cat: 'video', platform: 'Sora',
+    fill: {
+      'vid-type': 'Short Film / Cinematic Scene',
+      'vid-style': 'Cinematic Hollywood',
+      'vid-scene': 'Epic wide shot of ancient city at golden hour, camera slowly descending from aerial view, dramatic clouds, rays of light',
+      'vid-cam': 'Aerial drone descend',
+      'vid-pace': 'Slow Motion — cinematic',
+      'vid-dur': '10 seconds',
+      'vid-mood': 'Epic and powerful',
+    },
+    chips: { 'vid-fx': ['god rays volumetric light', 'particle dust glitter'] }
+  },
+  product_photo: {
+    cat: 'image', platform: 'Midjourney',
+    fill: {
+      'img-subject': 'Premium product on clean studio background',
+      'img-style': 'Photorealistic',
+      'img-light': 'Soft Studio Light',
+      'img-cam': 'Close-Up Portrait',
+      'img-mood': 'Peaceful / Serene',
+      'img-ratio': '1:1',
+      'img-extra': 'Professional product photography, soft shadow, white or gradient background, commercial grade',
+      'img-neg': 'blurry, bad lighting, dark, messy background, watermark',
+    },
+    chips: { 'img-colors': ['monochrome'] }
+  },
+  yt_seo: {
+    cat: 'youtube',
+    fill: {
+      'yt-niche': 'Devotional / Bhajan',
+      'yt-len': 'Short-Mid — 1–5 minutes',
+      'yt-audience': 'Hindu devotees, spiritual seekers aged 18–50',
+      'yt-thumb': '3D Cartoon / Animated',
+      'yt-mood': 'Devotional and divine',
+    }
+  },
+  lofi_music: {
+    cat: 'music', platform: 'Suno AI',
+    fill: {
+      'mus-genre': 'Lo-Fi Hip Hop',
+      'mus-mood': 'Calm and meditative',
+      'mus-tempo': 'Slow — 50–70 BPM',
+      'mus-vocal': 'No vocals — instrumental',
+      'mus-theme': 'Relaxing lo-fi beats for studying and chilling, rainy day feel',
+      'mus-lang': 'No lyrics — Instrumental',
+    },
+    chips: { 'mus-inst': ['piano', 'guitar', 'bass', 'drums'] }
+  },
+  fantasy_portrait: {
+    cat: 'image', platform: 'Midjourney',
+    fill: {
+      'img-subject': 'Epic fantasy warrior character with glowing armor and magical effects',
+      'img-style': 'Fantasy Illustration',
+      'img-light': 'Dramatic Cinematic Lighting',
+      'img-cam': 'Low Angle Hero Shot',
+      'img-mood': 'Epic / Majestic',
+      'img-ratio': '2:3',
+      'img-extra': 'Detailed armor, glowing runes, particle effects, dramatic sky, ultra detailed face',
+    },
+    chips: { 'img-colors': ['neon purple and cyan', 'black and red'] }
+  },
+  motivational_post: {
+    cat: 'social',
+    fill: {
+      'soc-platform': 'Instagram Feed Post',
+      'soc-niche': 'Motivational',
+      'soc-about': 'A powerful motivational post about never giving up and achieving your dreams',
+      'soc-tone': 'Inspiring / Motivational',
+      'soc-len': 'Medium — 3–5 lines',
+      'soc-audience': 'Young entrepreneurs, students, dreamers',
+      'soc-cta': 'Save this post',
+    }
+  },
+  nature_video: {
+    cat: 'video', platform: 'Luma AI',
+    fill: {
+      'vid-type': 'Nature / Landscape',
+      'vid-style': 'Cinematic Hollywood',
+      'vid-scene': 'Breathtaking aerial view of mountain range at sunrise, mist in valleys, golden light breaking through clouds',
+      'vid-cam': 'Aerial drone descend',
+      'vid-pace': 'Slow Motion — cinematic',
+      'vid-dur': '10 seconds',
+      'vid-mood': 'Peaceful and devotional',
+    },
+    chips: { 'vid-fx': ['particle dust glitter', 'smoke mist fog'] }
+  },
+  hashtag_pack: {
+    cat: 'hashtag',
+    fill: {
+      'ht-topic': 'Indian devotional bhajan spiritual content',
+      'ht-platform': 'Instagram',
+      'ht-niche': 'Devotional / Spiritual',
+      'ht-strategy': 'Mix — Small + Medium + Large',
+      'ht-lang': 'Mixed — English + Hindi',
+      'ht-count': '30 hashtags',
+    }
+  },
+  facebook_post: {
+    cat: 'social',
+    fill: {
+      'soc-platform': 'Facebook Post',
+      'soc-niche': 'Devotional / Spiritual',
+      'soc-about': 'A heartfelt devotional post about faith, spirituality and divine blessings for Facebook audience',
+      'soc-tone': 'Devotional / Spiritual',
+      'soc-len': 'Long — Story format',
+      'soc-audience': 'Indian families, devotees, spiritual seekers on Facebook',
+      'soc-cta': 'Share with friends',
+    }
+  },
+};
+
+function useTemplate(key) {
+  const t = TEMPLATES[key];
+  if(!t) return;
+
+  switchPage('generator');
+  setTimeout(() => {
+    // Switch to correct cat
+    document.querySelectorAll('.cat-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.cat-section').forEach(s => s.classList.remove('active'));
+    const tab = document.querySelector(`.cat-tab[data-cat="${t.cat}"]`);
+    if(tab) { tab.classList.add('active'); activeCat = t.cat; }
+    const section = document.getElementById('cat-' + t.cat);
+    if(section) section.classList.add('active');
+
+    // Set platform
+    if(t.platform) {
+      const pg = document.querySelector('#cat-' + t.cat + ' .platform-grid');
+      if(pg) {
+        pg.querySelectorAll('.plat-btn').forEach(b => b.classList.remove('active'));
+        const target = [...pg.querySelectorAll('.plat-btn')].find(b => b.dataset.p === t.platform);
+        if(target) target.classList.add('active');
+      }
+    }
+
+    // Fill form fields
+    if(t.fill) {
+      Object.entries(t.fill).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        if(el.tagName === 'SELECT') {
+          [...el.options].forEach(o => { if(o.text === val || o.value === val) el.value = o.value; });
+        } else {
+          el.value = val;
+        }
+      });
+    }
+
+    // Set chips
+    if(t.chips) {
+      Object.entries(t.chips).forEach(([groupId, activeVals]) => {
+        document.querySelectorAll(`#${groupId} .chip`).forEach(chip => {
+          chip.classList.toggle('active', activeVals.includes(chip.dataset.v));
+        });
+      });
+    }
+
+    document.querySelector('.cat-tabs').scrollIntoView({behavior:'smooth', block:'start'});
+  }, 120);
+}
+
+</script>
+</body>
+</html>
